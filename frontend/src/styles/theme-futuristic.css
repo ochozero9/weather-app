@@ -1,0 +1,584 @@
+/* Futuristic Theme - Colors only */
+
+[data-theme="futuristic"] {
+  --primary-color: #4a9eff;
+  --primary-dark: #2d7dd2;
+  --bg-color: #0d1926;
+  --card-bg: #132337;
+  --card-bg-light: #1a3148;
+  --text-primary: #ffffff;
+  --text-secondary: #8899a6;
+  --border-color: #2a4a6a;
+  --accent-cyan: #4a9eff;
+  --accent-orange: #ff9500;
+  --accent-green: #34c759;
+  --accent-blue: #5ac8fa;
+  --confidence-high: #4a9eff;
+  --confidence-mid-high: #34c759;
+  --confidence-mid-low: #ff9500;
+  --confidence-low: #ff453a;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --header-bg: linear-gradient(180deg, #0d1926 0%, #132337 100%);
+  --glass-bg: #1a3148;
+  --glass-border: #2a5a8a;
+  --glow: none;
+}
+
+[data-theme="futuristic"] body {
+  background: #0d1926;
+}
+
+[data-theme="futuristic"] .app {
+  background: #0d1926;
+}
+
+[data-theme="futuristic"] .app-header {
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme="futuristic"] .current-section {
+  background: transparent;
+  border: none;
+}
+
+[data-theme="futuristic"] .hero-temp-value {
+  background: linear-gradient(135deg, #ffffff 0%, #4a9eff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="futuristic"] .hero-icon {
+  filter: drop-shadow(0 0 20px rgba(74, 158, 255, 0.4));
+}
+
+[data-theme="futuristic"] .metric-bg {
+  stroke: var(--border-color);
+}
+
+[data-theme="futuristic"] .metric-fill-temp {
+  stroke: #ff9f0a;
+  filter: drop-shadow(0 0 4px rgba(255, 159, 10, 0.5));
+}
+
+[data-theme="futuristic"] .metric-fill-humidity {
+  stroke: #64d2ff;
+  filter: drop-shadow(0 0 4px rgba(100, 210, 255, 0.5));
+}
+
+[data-theme="futuristic"] .metric-fill-wind {
+  stroke: #30d158;
+  filter: drop-shadow(0 0 4px rgba(48, 209, 88, 0.5));
+}
+
+[data-theme="futuristic"] .metric-fill-precip {
+  stroke: #bf5af2;
+  filter: drop-shadow(0 0 4px rgba(191, 90, 242, 0.5));
+}
+
+[data-theme="futuristic"] .wind-arrow {
+  color: #30d158;
+  text-shadow: 0 0 8px rgba(48, 209, 88, 0.6);
+}
+
+[data-theme="futuristic"] .model-section {
+  background: transparent;
+  box-shadow: none;
+}
+
+[data-theme="futuristic"] .model-section h4 {
+  color: var(--text-primary);
+}
+
+[data-theme="futuristic"] .search-input {
+  background: var(--card-bg);
+  border-color: var(--glass-border);
+  color: var(--text-primary);
+}
+
+[data-theme="futuristic"] .search-input:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+}
+
+[data-theme="futuristic"] .search-input::placeholder {
+  color: var(--text-secondary);
+}
+
+[data-theme="futuristic"] .search-results {
+  background: rgba(19, 35, 55, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-color: var(--glass-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="futuristic"] .search-no-results {
+  background: rgba(19, 35, 55, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-color: var(--glass-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="futuristic"] .search-results li:hover,
+[data-theme="futuristic"] .search-results li.selected {
+  background: var(--card-bg-light);
+}
+
+[data-theme="futuristic"] .hourly-item {
+  background: var(--card-bg);
+  border-color: var(--glass-border);
+}
+
+[data-theme="futuristic"] .hourly-item:hover {
+  border-color: var(--accent-cyan);
+}
+
+[data-theme="futuristic"] .hour-time {
+  color: var(--text-secondary);
+}
+
+[data-theme="futuristic"] .hour-temp {
+  color: var(--text-primary);
+}
+
+[data-theme="futuristic"] .hour-precip {
+  color: var(--accent-blue);
+}
+
+[data-theme="futuristic"] .hourly-forecast {
+  background: var(--card-bg);
+  border-color: var(--glass-border);
+}
+
+[data-theme="futuristic"] .hourly-header h3 {
+  color: var(--text-primary);
+}
+
+[data-theme="futuristic"] .hourly-scroll-wrapper::after {
+  background: linear-gradient(to right, transparent, var(--card-bg));
+}
+
+[data-theme="futuristic"] .hourly-scroll-wrapper::before {
+  background: linear-gradient(to left, transparent, var(--card-bg));
+}
+
+[data-theme="futuristic"] .graph-container::after {
+  background: linear-gradient(to right, transparent, var(--card-bg));
+}
+
+[data-theme="futuristic"] .graph-container::before {
+  background: linear-gradient(to left, transparent, var(--card-bg));
+}
+
+[data-theme="futuristic"] .hour-toggle {
+  background: var(--card-bg-light);
+  border-color: var(--glass-border);
+}
+
+[data-theme="futuristic"] .toggle-btn {
+  color: var(--text-secondary);
+}
+
+[data-theme="futuristic"] .toggle-btn:hover {
+  color: var(--text-primary);
+}
+
+[data-theme="futuristic"] .toggle-btn.active {
+  background: var(--accent-cyan);
+  color: #ffffff;
+  box-shadow: none;
+}
+
+[data-theme="futuristic"] .daily-forecast {
+  background: transparent;
+  border: none;
+}
+
+[data-theme="futuristic"] .daily-header {
+  color: var(--text-secondary);
+  border-bottom-color: var(--border-color);
+}
+
+[data-theme="futuristic"] .daily-item {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme="futuristic"] .daily-item:last-child {
+  border-bottom: none;
+}
+
+[data-theme="futuristic"] .daily-item:hover {
+  background: rgba(74, 158, 255, 0.05);
+}
+
+[data-theme="futuristic"] .day-name {
+  color: var(--text-primary);
+}
+
+[data-theme="futuristic"] .temp-high {
+  color: var(--text-primary);
+}
+
+[data-theme="futuristic"] .temp-low {
+  color: var(--text-secondary);
+}
+
+[data-theme="futuristic"] .day-precip {
+  color: var(--accent-blue);
+}
+
+[data-theme="futuristic"] .daily-legend {
+  border-top-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+[data-theme="futuristic"] .confidence-high {
+  background: var(--confidence-high);
+  box-shadow: none;
+}
+
+[data-theme="futuristic"] .confidence-mid-high {
+  background: var(--confidence-mid-high);
+  box-shadow: none;
+}
+
+[data-theme="futuristic"] .confidence-mid-low {
+  background: var(--confidence-mid-low);
+  box-shadow: none;
+}
+
+[data-theme="futuristic"] .confidence-low {
+  background: var(--confidence-low);
+  box-shadow: none;
+}
+
+[data-theme="futuristic"] .toggle-models-btn {
+  background: var(--card-bg);
+  border-color: var(--glass-border);
+  color: var(--text-primary);
+}
+
+[data-theme="futuristic"] .toggle-models-btn:hover {
+  border-color: var(--accent-cyan);
+  background: var(--card-bg-light);
+}
+
+[data-theme="futuristic"] .model-comparison {
+  background: var(--card-bg);
+  border-color: var(--glass-border);
+}
+
+[data-theme="futuristic"] .comparison-table th,
+[data-theme="futuristic"] .comparison-table td {
+  border-color: var(--border-color);
+}
+
+[data-theme="futuristic"] .comparison-table .ensemble-row {
+  background: rgba(74, 158, 255, 0.1);
+}
+
+[data-theme="futuristic"] .hour-selector {
+  background: var(--card-bg-light);
+  border-color: var(--glass-border);
+  color: var(--text-primary);
+}
+
+[data-theme="futuristic"] .model-spread {
+  border-top-color: var(--border-color);
+}
+
+[data-theme="futuristic"] .spread-item {
+  background: var(--card-bg);
+  border-color: var(--glass-border);
+}
+
+[data-theme="futuristic"] .spread-label {
+  color: var(--text-secondary);
+}
+
+[data-theme="futuristic"] .spread-value {
+  color: var(--text-primary);
+}
+
+[data-theme="futuristic"] .accuracy-badge {
+  border-color: var(--glass-border);
+  background: var(--card-bg-light);
+}
+
+[data-theme="futuristic"] .accuracy-collecting {
+  background: var(--card-bg-light);
+  color: var(--text-secondary);
+}
+
+[data-theme="futuristic"] .accuracy-excellent {
+  background: rgba(52, 199, 89, 0.15);
+  color: var(--confidence-high);
+  border-color: rgba(52, 199, 89, 0.3);
+}
+
+[data-theme="futuristic"] .accuracy-good {
+  background: rgba(255, 149, 0, 0.15);
+  color: var(--confidence-mid-high);
+  border-color: rgba(255, 149, 0, 0.3);
+}
+
+[data-theme="futuristic"] .accuracy-fair {
+  background: rgba(255, 149, 0, 0.1);
+  color: #ffb340;
+  border-color: rgba(255, 149, 0, 0.2);
+}
+
+[data-theme="futuristic"] .accuracy-poor {
+  background: rgba(255, 69, 58, 0.15);
+  color: var(--confidence-low);
+  border-color: rgba(255, 69, 58, 0.3);
+}
+
+[data-theme="futuristic"] .app-footer {
+  background: var(--card-bg);
+  border-top-color: var(--border-color);
+}
+
+[data-theme="futuristic"] .app-footer a {
+  color: var(--accent-cyan);
+}
+
+[data-theme="futuristic"] .loading-state,
+[data-theme="futuristic"] .empty-state {
+  color: var(--text-secondary);
+}
+
+[data-theme="futuristic"] .error-state {
+  background: rgba(255, 69, 58, 0.1);
+  color: var(--confidence-low);
+  border-color: rgba(255, 69, 58, 0.3);
+}
+
+[data-theme="futuristic"] .view-toggle {
+  background: var(--card-bg-light);
+  border-color: var(--glass-border);
+}
+
+[data-theme="futuristic"] .graph-grid {
+  stroke: var(--border-color);
+}
+
+[data-theme="futuristic"] .temp-point {
+  stroke: var(--card-bg);
+}
+
+[data-theme="futuristic"] .precip-area {
+  fill: rgba(90, 200, 250, 0.1);
+}
+
+[data-theme="futuristic"] .theme-btn {
+  background: var(--card-bg-light);
+  border-color: var(--glass-border);
+  color: var(--text-secondary);
+}
+
+[data-theme="futuristic"] .theme-btn:hover {
+  border-color: var(--accent-cyan);
+  color: var(--text-primary);
+}
+
+[data-theme="futuristic"] .theme-btn.active {
+  background: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+  color: #ffffff;
+}
+
+[data-theme="futuristic"] .unit-toggle {
+  background: var(--card-bg-light);
+  border-color: var(--glass-border);
+}
+
+[data-theme="futuristic"] .unit-btn {
+  color: var(--text-secondary);
+}
+
+[data-theme="futuristic"] .unit-btn:hover {
+  color: var(--text-primary);
+}
+
+[data-theme="futuristic"] .unit-btn.active {
+  background: var(--accent-cyan);
+  color: #ffffff;
+}
+
+[data-theme="futuristic"] .hourly-preview {
+  background: var(--card-bg);
+  border-color: var(--glass-border);
+}
+
+[data-theme="futuristic"] .hourly-preview-item {
+  background: var(--card-bg-light);
+  border-color: var(--glass-border);
+}
+
+[data-theme="futuristic"] .hourly-preview-precip {
+  color: var(--accent-cyan);
+}
+
+[data-theme="futuristic"] .precip-alert {
+  background: var(--card-bg);
+  border-color: var(--glass-border);
+}
+
+[data-theme="futuristic"] .precip-alert-item {
+  background: var(--card-bg-light);
+  border-color: var(--glass-border);
+}
+
+[data-theme="futuristic"] .secondary-data-item {
+  background: transparent;
+  border: none;
+}
+
+[data-theme="futuristic"] .three-day-forecast {
+  background: var(--card-bg);
+  border-color: var(--glass-border);
+}
+
+[data-theme="futuristic"] .three-day-item {
+  background: transparent;
+  border: none;
+}
+
+[data-theme="futuristic"] .three-day-precip {
+  color: var(--accent-cyan);
+}
+
+[data-theme="futuristic"] .tab-bar {
+  background: var(--card-bg);
+  border-top-color: var(--glass-border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+[data-theme="futuristic"] .tab-bar-item.active {
+  color: var(--accent-cyan);
+}
+
+[data-theme="futuristic"] .settings-section {
+  background: var(--card-bg);
+  border-color: var(--glass-border);
+}
+
+[data-theme="futuristic"] .settings-unit-btn {
+  background: var(--card-bg-light);
+}
+
+[data-theme="futuristic"] .settings-unit-btn.active {
+  border-color: var(--accent-cyan);
+  background: rgba(74, 158, 255, 0.15);
+}
+
+[data-theme="futuristic"] .settings-theme-btn.active {
+  border-color: var(--accent-cyan);
+}
+
+[data-theme="futuristic"] .settings-icon-btn {
+  background: var(--card-bg-light);
+}
+
+[data-theme="futuristic"] .settings-icon-btn.active {
+  border-color: var(--accent-cyan);
+  background: rgba(74, 158, 255, 0.15);
+}
+
+[data-theme="futuristic"] .icon-preview {
+  background: var(--card-bg);
+  border-color: var(--glass-border);
+}
+
+[data-theme="futuristic"] .map-layer-toggle,
+[data-theme="futuristic"] .map-hour-toggle,
+[data-theme="futuristic"] .map-current-data {
+  background: var(--card-bg);
+  border-color: var(--glass-border);
+}
+
+[data-theme="futuristic"] .map-layer-btn.active {
+  background: var(--accent-cyan);
+}
+
+[data-theme="futuristic"] .map-hour-btn.active {
+  background: var(--accent-cyan);
+}
+
+[data-theme="futuristic"] .floating-hourly {
+  background: var(--card-bg);
+  border-top-color: var(--glass-border);
+}
+
+[data-theme="futuristic"] .dial-indicator {
+  background: var(--accent-cyan);
+}
+
+[data-theme="futuristic"] .dial-indicator::before {
+  background: var(--accent-cyan);
+}
+
+[data-theme="futuristic"] .weather-tooltip {
+  background: var(--card-bg) !important;
+  border-color: var(--glass-border) !important;
+}
+
+[data-theme="futuristic"] .toggle-switch {
+  background: var(--border-color);
+}
+
+[data-theme="futuristic"] .toggle-switch.active {
+  background: var(--accent-cyan);
+}
+
+[data-theme="futuristic"] .recent-location-item {
+  background: var(--card-bg);
+  border-color: var(--glass-border);
+}
+
+[data-theme="futuristic"] .recent-location-item:hover {
+  background: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+}
+
+[data-theme="futuristic"] .location-selector-btn {
+  background: var(--card-bg);
+  border-color: var(--glass-border);
+}
+
+[data-theme="futuristic"] .location-selector-btn:hover {
+  border-color: var(--accent-cyan);
+}
+
+[data-theme="futuristic"] .location-dropdown {
+  background: var(--card-bg);
+  border-color: var(--glass-border);
+}
+
+[data-theme="futuristic"] .location-dropdown-item:hover {
+  background: var(--card-bg-light);
+}
+
+[data-theme="futuristic"] .location-dropdown-item.active {
+  background: rgba(74, 158, 255, 0.15);
+}
+
+[data-theme="futuristic"] .timeline-dial {
+  background: rgba(13, 25, 38, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+[data-theme="futuristic"] .forecast-card-floating {
+  background: rgba(13, 25, 38, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
