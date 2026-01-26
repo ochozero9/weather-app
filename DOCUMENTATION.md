@@ -794,7 +794,11 @@ localStorage.clear()
 
 ## License
 
-Private repository. All rights reserved.
+This project is released under a **free use, non-commercial license**. See [LICENSE](LICENSE) for full terms.
+
+- Free to use for personal/educational purposes
+- Free to modify and share
+- No selling or commercial use
 
 ---
 
