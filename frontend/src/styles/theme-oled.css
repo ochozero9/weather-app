@@ -1,0 +1,390 @@
+/* OLED Theme - Colors only */
+
+[data-theme="oled"] {
+  --primary-color: #3b82f6;
+  --primary-dark: #2563eb;
+  --bg-color: #000000;
+  --card-bg: #0a0a0a;
+  --card-bg-light: #141414;
+  --text-primary: #ffffff;
+  --text-secondary: #737373;
+  --border-color: #262626;
+  --accent-cyan: #3b82f6;
+  --accent-orange: #f59e0b;
+  --accent-green: #22c55e;
+  --accent-blue: #0ea5e9;
+  --confidence-high: #3b82f6;
+  --confidence-mid-high: #22c55e;
+  --confidence-mid-low: #f59e0b;
+  --confidence-low: #ef4444;
+  --shadow: none;
+  --shadow-lg: none;
+  --header-bg: #000000;
+  --glass-bg: #0a0a0a;
+  --glass-border: #262626;
+  --glow: none;
+}
+
+[data-theme="oled"] body {
+  background: #000000;
+}
+
+[data-theme="oled"] .app {
+  background: #000000;
+}
+
+[data-theme="oled"] .current-section {
+  background: transparent;
+  border: none;
+}
+
+[data-theme="oled"] .secondary-data-item {
+  background: transparent;
+  border: none;
+}
+
+[data-theme="oled"] .hourly-preview {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="oled"] .hourly-preview-item {
+  background: var(--card-bg-light);
+  border-color: var(--border-color);
+}
+
+[data-theme="oled"] .hourly-preview-precip {
+  color: var(--accent-blue);
+}
+
+[data-theme="oled"] .precip-alert {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="oled"] .precip-alert-item {
+  background: var(--card-bg-light);
+  border-color: var(--border-color);
+}
+
+[data-theme="oled"] .three-day-forecast {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="oled"] .three-day-item {
+  background: transparent;
+  border: none;
+}
+
+[data-theme="oled"] .three-day-precip {
+  color: var(--accent-blue);
+}
+
+[data-theme="oled"] .model-section {
+  background: transparent;
+}
+
+[data-theme="oled"] .toggle-models-btn {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="oled"] .toggle-models-btn:hover {
+  border-color: var(--accent-cyan);
+}
+
+[data-theme="oled"] .model-spread {
+  border-top-color: var(--border-color);
+}
+
+[data-theme="oled"] .spread-item {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="oled"] .spread-label {
+  color: var(--text-secondary);
+}
+
+[data-theme="oled"] .spread-value {
+  color: var(--text-primary);
+}
+
+[data-theme="oled"] .accuracy-badge {
+  border-color: var(--border-color);
+  background: var(--card-bg);
+}
+
+[data-theme="oled"] .tab-bar {
+  background: #000000;
+  border-top-color: var(--border-color);
+}
+
+[data-theme="oled"] .tab-bar-item.active {
+  color: var(--accent-cyan);
+}
+
+[data-theme="oled"] .settings-section {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="oled"] .toggle-switch {
+  background: var(--border-color);
+}
+
+[data-theme="oled"] .toggle-switch.active {
+  background: var(--accent-cyan);
+}
+
+[data-theme="oled"] .settings-unit-btn {
+  background: var(--card-bg-light);
+}
+
+[data-theme="oled"] .settings-unit-btn.active {
+  border-color: var(--accent-cyan);
+  background: rgba(59, 130, 246, 0.15);
+}
+
+[data-theme="oled"] .settings-theme-btn.active {
+  border-color: var(--accent-cyan);
+}
+
+[data-theme="oled"] .theme-preview-oled {
+  background: #000000;
+  border-color: #262626;
+}
+
+[data-theme="oled"] .settings-icon-btn {
+  background: var(--card-bg-light);
+}
+
+[data-theme="oled"] .settings-icon-btn.active {
+  border-color: var(--accent-cyan);
+  background: rgba(59, 130, 246, 0.15);
+}
+
+[data-theme="oled"] .icon-preview {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="oled"] .search-input {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="oled"] .search-input:focus {
+  border-color: var(--accent-cyan);
+}
+
+[data-theme="oled"] .search-input::placeholder {
+  color: var(--text-secondary);
+}
+
+[data-theme="oled"] .search-results {
+  background: #000000;
+  border-color: var(--border-color);
+}
+
+[data-theme="oled"] .search-results li:hover,
+[data-theme="oled"] .search-results li.selected {
+  background: var(--card-bg-light);
+}
+
+[data-theme="oled"] .search-no-results {
+  background: #000000;
+  border-color: var(--border-color);
+}
+
+[data-theme="oled"] .recent-location-item {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="oled"] .recent-location-item:hover {
+  background: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+}
+
+[data-theme="oled"] .location-selector-btn {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="oled"] .location-selector-btn:hover {
+  border-color: var(--accent-cyan);
+}
+
+[data-theme="oled"] .location-dropdown {
+  background: #000000;
+  border-color: var(--border-color);
+}
+
+[data-theme="oled"] .location-dropdown-item:hover {
+  background: var(--card-bg-light);
+}
+
+[data-theme="oled"] .location-dropdown-item.active {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+[data-theme="oled"] .daily-forecast {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="oled"] .daily-header {
+  color: var(--text-secondary);
+  border-bottom-color: var(--border-color);
+}
+
+[data-theme="oled"] .daily-item {
+  border-bottom-color: var(--border-color);
+}
+
+[data-theme="oled"] .daily-item:last-child {
+  border-bottom: none;
+}
+
+[data-theme="oled"] .daily-item:hover {
+  background: rgba(59, 130, 246, 0.05);
+}
+
+[data-theme="oled"] .temp-low {
+  color: var(--text-secondary);
+}
+
+[data-theme="oled"] .day-precip {
+  color: var(--accent-blue);
+}
+
+[data-theme="oled"] .hourly-forecast {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="oled"] .hourly-item {
+  background: var(--card-bg-light);
+  border-color: var(--border-color);
+}
+
+[data-theme="oled"] .hourly-item:hover {
+  border-color: var(--accent-cyan);
+}
+
+[data-theme="oled"] .hour-precip {
+  color: var(--accent-blue);
+}
+
+[data-theme="oled"] .hour-toggle {
+  background: var(--card-bg-light);
+  border-color: var(--border-color);
+}
+
+[data-theme="oled"] .toggle-btn.active {
+  background: var(--accent-cyan);
+}
+
+[data-theme="oled"] .floating-hourly {
+  background: #000000;
+  border-top-color: var(--border-color);
+}
+
+[data-theme="oled"] .map-layer-toggle,
+[data-theme="oled"] .map-hour-toggle,
+[data-theme="oled"] .map-current-data {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="oled"] .map-layer-btn.active,
+[data-theme="oled"] .map-hour-btn.active {
+  background: var(--accent-cyan);
+}
+
+[data-theme="oled"] .dial-indicator {
+  background: var(--accent-cyan);
+}
+
+[data-theme="oled"] .dial-indicator::before {
+  background: var(--accent-cyan);
+}
+
+[data-theme="oled"] .weather-tooltip {
+  background: #000000 !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="oled"] .model-comparison {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="oled"] .comparison-table th,
+[data-theme="oled"] .comparison-table td {
+  border-color: var(--border-color);
+}
+
+[data-theme="oled"] .comparison-table .ensemble-row {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+[data-theme="oled"] .hour-selector {
+  background: var(--card-bg-light);
+  border-color: var(--border-color);
+}
+
+[data-theme="oled"] .loading-state,
+[data-theme="oled"] .empty-state {
+  color: var(--text-secondary);
+}
+
+[data-theme="oled"] .error-state {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--confidence-low);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+[data-theme="oled"] .graph-grid {
+  stroke: var(--border-color);
+}
+
+[data-theme="oled"] .temp-point {
+  stroke: #000000;
+}
+
+[data-theme="oled"] .precip-area {
+  fill: rgba(14, 165, 233, 0.1);
+}
+
+[data-theme="oled"] .hourly-scroll-wrapper::after {
+  background: linear-gradient(to right, transparent, var(--card-bg));
+}
+
+[data-theme="oled"] .hourly-scroll-wrapper::before {
+  background: linear-gradient(to left, transparent, var(--card-bg));
+}
+
+[data-theme="oled"] .graph-container::after {
+  background: linear-gradient(to right, transparent, var(--card-bg));
+}
+
+[data-theme="oled"] .graph-container::before {
+  background: linear-gradient(to left, transparent, var(--card-bg));
+}
+
+[data-theme="oled"] .timeline-dial {
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+[data-theme="oled"] .forecast-card-floating {
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
