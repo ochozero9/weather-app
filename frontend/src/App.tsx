@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useWeather } from './hooks/useWeather';
 import { LocationSearch } from './components/LocationSearch';
 import { UnifiedWeather } from './components/UnifiedWeather';
-import { PasswordGate } from './components/PasswordGate';
 
 // Lazy load Settings - only loaded when user opens settings
 const Settings = lazy(() => import('./components/Settings').then(m => ({ default: m.Settings })));
@@ -202,7 +201,6 @@ function App() {
   const isOnboarding = !selectedLocation && !forecast;
 
   return (
-    <PasswordGate password="weather">
     <div className="app">
       {/* Onboarding Screen */}
       {isOnboarding && (
@@ -317,7 +315,6 @@ function App() {
         </>
       )}
     </div>
-    </PasswordGate>
   );
 }
 
