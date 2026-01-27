@@ -6,8 +6,8 @@ const STATIC_CACHE = 'weather-static-v1';
 
 // Assets to cache on install
 const PRECACHE_ASSETS = [
-  '/',
-  '/index.html',
+  '/weather-app/',
+  '/weather-app/index.html',
 ];
 
 // Install event - precache essential assets
