@@ -1,76 +1,37 @@
 /**
  * API Client
  * ==========
- * Centralized API communication layer for the weather app.
+ * Self-contained weather data layer. All data is fetched directly
+ * from Open-Meteo APIs and processed in the browser.
+ * No backend server required.
  *
- * All API calls go through fetchApi() which handles:
- * - Error handling with user-friendly messages
- * - AbortController support for cancellable requests
- * - JSON parsing with error handling
+ * Architecture:
+ * - fetchAllModels() → 6 parallel requests to Open-Meteo
+ * - calculateEnsemble() → weighted averaging in browser
+ * - Raw model data cached for model comparison view
  */
 
 import type {
-  AccuracyBadge,
-  AccuracyMetrics,
   EnsembleForecast,
   GeocodingResult,
   Location,
   ModelComparison,
 } from '../types/weather';
+import { fetchAllModels, fetchAirQuality, geocodeLocation as geoSearch } from '../services/openMeteo';
+import { calculateEnsemble, buildModelComparison } from '../services/ensemble';
+import type { RawModelForecast } from '../services/openMeteo';
 
-/**
- * API Base URL Construction
- *
- * IMPORTANT: This assumes the backend runs on the SAME HOSTNAME as the frontend,
- * just on port 8000. This works for:
- * - localhost development (localhost:5173 → localhost:8000)
- * - LAN access (192.168.x.x:5173 → 192.168.x.x:8000)
- * - Mobile testing on same network
- *
- * This will NOT work for:
- * - Different domains (api.example.com vs app.example.com)
- * - Production with reverse proxy (would need /api prefix without port)
- *
- * For production deployment, consider:
- * - Environment variable: import.meta.env.VITE_API_URL
- * - Reverse proxy: Nginx routing /api/* to backend
- */
-const protocol = window.location.protocol;
-const API_BASE = `${protocol}//${window.location.hostname}:8000/api`;
+// Cache raw model data for model comparison without re-fetching
+let cachedModelData: RawModelForecast[] | null = null;
 
-async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  let response: Response;
-  try {
-    response = await fetch(`${API_BASE}${endpoint}`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      ...options,
-    });
-  } catch (err) {
-    // Re-throw abort errors as-is so callers can handle them
-    if (err instanceof Error && err.name === 'AbortError') {
-      throw err;
-    }
-    throw new Error('Unable to connect to weather service. Check your connection.');
-  }
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-    throw new Error(error.detail || `HTTP ${response.status}`);
-  }
-
-  // Handle JSON parsing errors gracefully
-  try {
-    return await response.json();
-  } catch {
-    throw new Error('Invalid response from weather service');
-  }
-}
-
-// Forecast endpoints
 export async function getForecast(lat: number, lon: number): Promise<EnsembleForecast> {
-  return fetchApi<EnsembleForecast>(`/forecast?lat=${lat}&lon=${lon}`);
+  const [modelData, airQuality] = await Promise.all([
+    fetchAllModels(lat, lon),
+    fetchAirQuality(lat, lon),
+  ]);
+
+  cachedModelData = modelData;
+  return calculateEnsemble(modelData, airQuality);
 }
 
 export async function getModelComparison(
@@ -78,52 +39,56 @@ export async function getModelComparison(
   lon: number,
   hourOffset = 0
 ): Promise<ModelComparison> {
-  return fetchApi<ModelComparison>(
-    `/forecast/models?lat=${lat}&lon=${lon}&hour_offset=${hourOffset}`
-  );
+  // Use cached data if available for the same location
+  let modelData = cachedModelData;
+  if (
+    !modelData ||
+    Math.abs(modelData[0].latitude - lat) > 0.01 ||
+    Math.abs(modelData[0].longitude - lon) > 0.01
+  ) {
+    modelData = await fetchAllModels(lat, lon);
+    cachedModelData = modelData;
+  }
+  return buildModelComparison(modelData, hourOffset);
 }
 
 export async function geocodeLocation(
   query: string,
   signal?: AbortSignal
 ): Promise<{ results: GeocodingResult[] }> {
-  return fetchApi<{ results: GeocodingResult[] }>(
-    `/forecast/geocode?query=${encodeURIComponent(query)}`,
-    signal ? { signal } : undefined
-  );
+  const results = await geoSearch(query, 5, signal);
+  return { results };
 }
 
-// Location endpoints
+// Location storage via localStorage (no backend needed)
+const SAVED_LOCATIONS_KEY = 'weather-app-saved-locations';
+let nextId = Date.now();
+
 export async function saveLocation(location: Omit<Location, 'id'>): Promise<Location> {
-  return fetchApi<Location>('/locations', {
-    method: 'POST',
-    body: JSON.stringify(location),
-  });
+  const locations = await getSavedLocations();
+  // Prevent duplicates by coordinates
+  const existing = locations.find(
+    (l) => Math.abs(l.latitude - location.latitude) < 0.01 && Math.abs(l.longitude - location.longitude) < 0.01
+  );
+  if (existing) return existing;
+
+  const newLoc: Location = { ...location, id: nextId++ };
+  locations.unshift(newLoc);
+  localStorage.setItem(SAVED_LOCATIONS_KEY, JSON.stringify(locations));
+  return newLoc;
 }
 
 export async function getSavedLocations(): Promise<Location[]> {
-  return fetchApi<Location[]>('/locations');
+  try {
+    const saved = localStorage.getItem(SAVED_LOCATIONS_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
+  }
 }
 
 export async function deleteLocation(id: number): Promise<void> {
-  await fetchApi(`/locations/${id}`, { method: 'DELETE' });
-}
-
-// Accuracy endpoints
-export async function getAccuracyMetrics(
-  locationId?: number,
-  days = 30
-): Promise<AccuracyMetrics> {
-  const params = new URLSearchParams({ days: days.toString() });
-  if (locationId) params.set('location_id', locationId.toString());
-  return fetchApi<AccuracyMetrics>(`/accuracy?${params}`);
-}
-
-export async function getAccuracyBadge(
-  locationId?: number,
-  leadHours = 72
-): Promise<AccuracyBadge> {
-  const params = new URLSearchParams({ lead_hours: leadHours.toString() });
-  if (locationId) params.set('location_id', locationId.toString());
-  return fetchApi<AccuracyBadge>(`/accuracy/badge?${params}`);
+  const locations = await getSavedLocations();
+  const filtered = locations.filter((l) => l.id !== id);
+  localStorage.setItem(SAVED_LOCATIONS_KEY, JSON.stringify(filtered));
 }

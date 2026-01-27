@@ -1,40 +1,29 @@
 # Weather App
 
-A multi-model ensemble weather forecasting application that combines predictions from 6 different weather models to provide more accurate forecasts with confidence scoring.
+A self-contained, multi-model ensemble weather forecasting application that combines predictions from 6 different weather models to provide more accurate forecasts with confidence scoring. Runs entirely in the browser -- no backend server required.
 
 ## Features
 
 - **Multi-Model Ensemble Forecasting** - Combines GFS, ECMWF, ICON, GEM, JMA, and Meteo-France models
 - **Confidence Scoring** - Shows prediction reliability based on model agreement
-- **Accuracy Tracking** - Stores forecasts and verifies against actual observations
 - **Current Conditions** - Temperature, humidity, wind, precipitation, UV index, air quality
 - **7-Day Forecast** - Hourly and daily views with interactive graphs
+- **Model Comparison** - Side-by-side view of individual model predictions
 - **Multiple Themes** - Default, Futuristic (dark), Glass (frosted), OLED (pure black)
 - **4 Icon Styles** - Emoji, Weather Icons, Meteocons, Filled SVG
 - **Location Search** - City names, ZIP codes (US, UK, Canada)
 - **Offline Support** - Service worker caches static assets
+- **No Backend Required** - All API calls and calculations happen in the browser
 
 ## Tech Stack
 
 | Component | Technology |
 |-----------|------------|
-| Backend | Python 3.10+, FastAPI, SQLAlchemy, SQLite |
 | Frontend | React 19, TypeScript, Vite |
 | Data Source | [Open-Meteo API](https://open-meteo.com) (free, no API key) |
+| Storage | Browser localStorage |
 
 ## Quick Start
-
-### Backend
-
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-### Frontend
 
 ```bash
 cd frontend
@@ -42,58 +31,55 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173` in your browser.
+Open `http://localhost:5173` in your browser. That's it.
+
+### Production Build
+
+```bash
+cd frontend
+npm run build
+```
+
+The `dist/` folder can be deployed to any static hosting (GitHub Pages, Netlify, Vercel, etc.).
+
+## How It Works
+
+1. **Fetches 6 weather models in parallel** from Open-Meteo (free, no API key)
+2. **Combines predictions** using weighted averaging (ECMWF weighted highest at 1.2)
+3. **Calculates confidence** from model spread using exponential decay
+4. **Displays ensemble forecast** with hourly/daily views and interactive graphs
+
+All computation happens client-side in TypeScript.
 
 ## Project Structure
 
 ```
 weather-app/
-├── backend/
-│   ├── app/
-│   │   ├── main.py           # FastAPI entry point
-│   │   ├── api/routes/       # API endpoints
-│   │   ├── services/         # Business logic
-│   │   └── models/           # Database & schemas
-│   └── requirements.txt
-│
 ├── frontend/
 │   ├── src/
+│   │   ├── services/         # Open-Meteo client + ensemble calculator
+│   │   ├── api/              # API client layer
 │   │   ├── components/       # React components
 │   │   ├── hooks/            # Custom hooks
-│   │   ├── api/              # API client
+│   │   ├── types/            # TypeScript interfaces
+│   │   ├── utils/            # Storage, conversions
 │   │   └── styles/           # Theme CSS
 │   └── package.json
 │
+├── backend/                  # Legacy backend (no longer required)
 ├── DOCUMENTATION.md          # Full technical documentation
 ├── LICENSE                   # Usage terms
 └── README.md                 # This file
 ```
 
-## API Endpoints
-
-| Endpoint | Description |
-|----------|-------------|
-| `GET /api/forecast` | Ensemble weather forecast |
-| `GET /api/forecast/models` | Individual model predictions |
-| `GET /api/forecast/geocode` | Location search |
-| `GET /api/locations` | Saved locations |
-| `GET /api/accuracy` | Forecast accuracy metrics |
-
-Full API documentation available at `http://localhost:8000/docs` when backend is running.
-
 ## Documentation
 
 See [DOCUMENTATION.md](DOCUMENTATION.md) for complete technical documentation including:
-- Detailed setup instructions
-- Full API reference
-- Database schema
+- Architecture and data flow
+- Ensemble algorithm details
 - Component documentation
 - Configuration options
 - Debugging tips
-
-## Screenshots
-
-*Screenshots coming soon*
 
 ## Author
 
