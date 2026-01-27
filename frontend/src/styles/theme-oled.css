@@ -285,8 +285,13 @@
   border-color: var(--border-color);
 }
 
+[data-theme="oled"] .toggle-btn {
+  color: #e2e8f0;
+}
+
 [data-theme="oled"] .toggle-btn.active {
   background: var(--accent-cyan);
+  color: #ffffff;
 }
 
 [data-theme="oled"] .floating-hourly {
