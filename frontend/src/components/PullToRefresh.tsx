@@ -6,9 +6,9 @@ interface PullToRefreshProps {
   disabled?: boolean;
 }
 
-const THRESHOLD = 80; // Pull distance to trigger refresh
-const MAX_PULL = 120; // Maximum pull distance
-const RESISTANCE = 2.5; // Higher = more resistance
+const THRESHOLD = 70; // Pull distance to trigger refresh
+const MAX_PULL = 140; // Maximum pull distance
+const RESISTANCE = 1.8; // Higher = more resistance (lower = looser feel)
 
 export function PullToRefresh({ children, onRefresh, disabled }: PullToRefreshProps) {
   const [pullDistance, setPullDistance] = useState(0);
