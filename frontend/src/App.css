@@ -24,6 +24,10 @@
   --glow: none;
 }
 
+html, body {
+  overscroll-behavior-y: none; /* Disable native pull-to-refresh */
+}
+
 body {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   background-color: var(--bg-color);
@@ -3068,6 +3072,7 @@ input, select, button {
   overflow-x: hidden;
   height: 100%;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: none; /* Disable native pull-to-refresh */
 }
 
 .pull-indicator {
