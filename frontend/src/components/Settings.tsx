@@ -121,7 +121,7 @@ export function Settings({
             </label>
 
             <label className="settings-toggle">
-              <span className="settings-toggle-label">Show refresh button</span>
+              <span className="settings-toggle-label">Allow pull to refresh</span>
               <button
                 className={`toggle-switch ${showRefreshButton ? 'active' : ''}`}
                 onClick={() => onShowRefreshButtonChange(!showRefreshButton)}
