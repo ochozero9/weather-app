@@ -1,9 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+// Use relative paths for Tauri, /weather-app/ for GitHub Pages
+const isTauri = process.env.TAURI_ENV_PLATFORM !== undefined
+
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/weather-app/',
+  base: isTauri ? './' : '/weather-app/',
   plugins: [react()],
   server: {
     host: true, // Listen on all network interfaces
