@@ -35,16 +35,16 @@ export function AccuracyBadge({ modelSpread, dailyConfidence, showRefresh, onRef
   const expectedAccuracy = Math.round((modelAgreement * 0.4 + avgDailyConfidence * 0.6));
 
   const getAccuracyClass = (value: number) => {
-    if (value >= 85) return 'accuracy-excellent';
-    if (value >= 70) return 'accuracy-good';
-    if (value >= 55) return 'accuracy-fair';
-    return 'accuracy-poor';
+    if (value >= 75) return 'accuracy-high';
+    if (value >= 50) return 'accuracy-mid-high';
+    if (value >= 25) return 'accuracy-mid-low';
+    return 'accuracy-low';
   };
 
   const getConfidenceLabel = (value: number) => {
-    if (value >= 85) return 'High';
-    if (value >= 70) return 'Good';
-    if (value >= 55) return 'Fair';
+    if (value >= 75) return 'High';
+    if (value >= 50) return 'Good';
+    if (value >= 25) return 'Fair';
     return 'Low';
   };
 
