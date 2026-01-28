@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "build:web": "tsc -b && vite build && cp dist/index.html dist/404.html",
     "build:tauri": "tauri build",
-    "deploy": "npm run build:web && gh-pages -d dist",
+    "deploy": "npm run build:web && npx gh-pages -d dist",
     "release": "npm run deploy && npm run build:tauri",
     "lint": "eslint .",
     "preview": "vite preview",
