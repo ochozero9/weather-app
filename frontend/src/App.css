@@ -3127,5 +3127,4 @@ input, select, button {
 
 .pull-content {
   min-height: 100%;
-  will-change: transform;
 }
