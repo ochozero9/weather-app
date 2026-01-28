@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { useWeather } from './hooks/useWeather';
 import { LocationSearch } from './components/LocationSearch';
 import { UnifiedWeather } from './components/UnifiedWeather';
+import { PullToRefresh } from './components/PullToRefresh';
 
 // Lazy load Settings - only loaded when user opens settings
 const Settings = lazy(() => import('./components/Settings').then(m => ({ default: m.Settings })));
@@ -188,6 +189,12 @@ function App() {
     }
   };
 
+  const handlePullRefresh = useCallback(async () => {
+    if (selectedLocation) {
+      await fetchForecast(selectedLocation.latitude, selectedLocation.longitude);
+    }
+  }, [selectedLocation, fetchForecast]);
+
   const handleResetOnboarding = () => {
     // Clear all location data
     setSelectedLocation(null);
@@ -238,35 +245,37 @@ function App() {
       {!isOnboarding && (
         <>
       <main className="app-main">
-        <div className="tab-content">
-          {loading && !forecast && <div className="loading-state">Loading forecast...</div>}
-          {error && !forecast && <div className="error-state">{error}</div>}
+        <PullToRefresh onRefresh={handlePullRefresh} disabled={!selectedLocation}>
+          <div className="tab-content">
+            {loading && !forecast && <div className="loading-state">Loading forecast...</div>}
+            {error && !forecast && <div className="error-state">{error}</div>}
 
-          {forecast && (
-            <UnifiedWeather
-              hourly={forecast.hourly.slice(getCurrentHourIndex(forecast.hourly))}
-              daily={forecast.daily}
-              current={forecast.current}
-              unit={tempUnit}
-              iconStyle={iconStyle}
-              locationName={selectedLocation ? `${selectedLocation.name}, ${selectedLocation.country}` : undefined}
-              modelSpread={forecast.model_spread}
-              selectedLocation={selectedLocation ?? undefined}
-              recentLocations={recentLocations}
-              quickSwitch={quickSwitch}
-              onLocationSelect={handleRecentLocationSelect}
-              showRefresh={showRefreshButton}
-              onRefresh={handleRefresh}
-              onSettingsClick={() => setShowSettings(true)}
-            />
-          )}
+            {forecast && (
+              <UnifiedWeather
+                hourly={forecast.hourly.slice(getCurrentHourIndex(forecast.hourly))}
+                daily={forecast.daily}
+                current={forecast.current}
+                unit={tempUnit}
+                iconStyle={iconStyle}
+                locationName={selectedLocation ? `${selectedLocation.name}, ${selectedLocation.country}` : undefined}
+                modelSpread={forecast.model_spread}
+                selectedLocation={selectedLocation ?? undefined}
+                recentLocations={recentLocations}
+                quickSwitch={quickSwitch}
+                onLocationSelect={handleRecentLocationSelect}
+                showRefresh={showRefreshButton}
+                onRefresh={handleRefresh}
+                onSettingsClick={() => setShowSettings(true)}
+              />
+            )}
 
-          {!forecast && !loading && !error && (
-            <div className="empty-state">
-              <p>Search for a location in Settings to see the weather</p>
-            </div>
-          )}
-        </div>
+            {!forecast && !loading && !error && (
+              <div className="empty-state">
+                <p>Search for a location in Settings to see the weather</p>
+              </div>
+            )}
+          </div>
+        </PullToRefresh>
       </main>
 
       {/* Settings Close Button */}
