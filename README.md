@@ -1,6 +1,15 @@
 # Weather App
 
-A self-contained, multi-model ensemble weather forecasting application that combines predictions from 6 different weather models to provide more accurate forecasts with confidence scoring. Runs entirely in the browser -- no backend server required.
+A self-contained, multi-model ensemble weather forecasting application that combines predictions from 6 different weather models to provide more accurate forecasts with confidence scoring.
+
+**Live Demo:** https://ochozero9.github.io/weather-app/
+
+## Platforms
+
+| Platform | Description |
+|----------|-------------|
+| **Web** | Runs in any browser, hosted on GitHub Pages |
+| **macOS** | Native app via Tauri (~8MB, uses system WebView) |
 
 ## Features
 
@@ -20,10 +29,14 @@ A self-contained, multi-model ensemble weather forecasting application that comb
 | Component | Technology |
 |-----------|------------|
 | Frontend | React 19, TypeScript, Vite |
+| Native App | Tauri 2 (Rust + system WebView) |
 | Data Source | [Open-Meteo API](https://open-meteo.com) (free, no API key) |
 | Storage | Browser localStorage |
+| Hosting | GitHub Pages |
 
 ## Quick Start
+
+### Development
 
 ```bash
 cd frontend
@@ -31,16 +44,20 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173` in your browser. That's it.
+Open `http://localhost:5173` in your browser.
 
-### Production Build
+### Build & Deploy
 
-```bash
-cd frontend
-npm run build
-```
+| Command | Description |
+|---------|-------------|
+| `npm run release` | Deploy to GitHub Pages AND build macOS app |
+| `npm run deploy` | Deploy to GitHub Pages only |
+| `npm run build:tauri` | Build macOS .dmg only |
+| `npm run build:web` | Build for web (no deploy) |
 
-The `dist/` folder can be deployed to any static hosting (GitHub Pages, Netlify, Vercel, etc.).
+After `npm run release`:
+- **Web:** Updated at https://ochozero9.github.io/weather-app/
+- **macOS:** DMG at `src-tauri/target/release/bundle/dmg/Weather_*.dmg`
 
 ## How It Works
 
@@ -64,13 +81,28 @@ weather-app/
 │   │   ├── types/            # TypeScript interfaces
 │   │   ├── utils/            # Storage, conversions
 │   │   └── styles/           # Theme CSS
+│   ├── src-tauri/            # Tauri native app config
+│   │   ├── src/              # Rust entry point
+│   │   ├── icons/            # App icons
+│   │   └── tauri.conf.json   # Tauri config
 │   └── package.json
 │
-├── backend/                  # Legacy backend (no longer required)
+├── backend/                  # Legacy backend (not required)
 ├── DOCUMENTATION.md          # Full technical documentation
-├── LICENSE                   # Usage terms
-└── README.md                 # This file
+├── LICENSE
+└── README.md
 ```
+
+## Requirements
+
+### Web Development
+- Node.js 18+
+- npm 9+
+
+### Native App (Tauri)
+- All of the above, plus:
+- Rust (install via `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`)
+- Xcode Command Line Tools (macOS)
 
 ## Documentation
 
