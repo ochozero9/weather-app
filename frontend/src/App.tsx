@@ -264,7 +264,7 @@ function App() {
                   recentLocations={recentLocations}
                   quickSwitch={quickSwitch}
                   onLocationSelect={handleRecentLocationSelect}
-                  onSettingsClick={() => setShowSettings(true)}
+                  onSettingsClick={showSettings ? undefined : () => setShowSettings(true)}
                 />
               )}
 
@@ -295,7 +295,7 @@ function App() {
                 onLocationSelect={handleRecentLocationSelect}
                 showRefresh={true}
                 onRefresh={handleRefresh}
-                onSettingsClick={() => setShowSettings(true)}
+                onSettingsClick={showSettings ? undefined : () => setShowSettings(true)}
               />
             )}
 
