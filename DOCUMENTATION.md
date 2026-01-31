@@ -2,8 +2,9 @@
 
 > **Repository**: https://github.com/ochozero9/weather-app
 > **Live Demo**: https://ochozero9.github.io/weather-app/
+> **Version**: 1.2.0
 > **Last Updated**: January 2026
-> **Stack**: React/TypeScript + Tauri (optional native app)
+> **Stack**: React 19/TypeScript + FastAPI backend + Tauri (optional native app)
 
 ---
 
@@ -47,27 +48,29 @@ A self-contained weather forecasting application that combines predictions from 
 ┌─────────────────────────────────────────────────────────────┐
 │                        Browser / Tauri                       │
 ├─────────────────────────────────────────────────────────────┤
-│  React UI                                                    │
+│  React UI (with React.memo optimization)                     │
 │  ├── Components (CurrentWeather, HourlyGraph, etc.)         │
-│  ├── Hooks (useWeather)                                      │
+│  ├── Hooks (useWeather - stale-while-revalidate)            │
 │  └── Utils (storage, conversions)                            │
 ├─────────────────────────────────────────────────────────────┤
 │  API Client Layer                                            │
-│  └── client.ts (orchestrates fetching + caching)            │
+│  └── client.ts (orchestrates fetching + request deduplication)│
 ├─────────────────────────────────────────────────────────────┤
 │  Services                                                    │
 │  ├── openMeteo.ts  → Direct API calls to Open-Meteo         │
 │  └── ensemble.ts   → Weighted averaging, confidence calc     │
 └─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    External APIs (CORS-enabled)              │
-│  ├── api.open-meteo.com/v1/forecast (6 weather models)      │
-│  ├── air-quality-api.open-meteo.com (AQI data)              │
-│  ├── geocoding-api.open-meteo.com (location search)         │
-│  └── api.zippopotam.us (ZIP code lookup)                    │
-└─────────────────────────────────────────────────────────────┘
+                │                              │
+                ▼                              ▼
+┌───────────────────────────────┐  ┌───────────────────────────┐
+│  External APIs (CORS-enabled) │  │  Backend (optional)       │
+│  ├── api.open-meteo.com       │  │  ├── FastAPI              │
+│  ├── air-quality-api          │  │  ├── SQLite database      │
+│  ├── geocoding-api            │  │  └── Accuracy tracking    │
+│  └── api.zippopotam.us        │  │      • Forecast snapshots │
+└───────────────────────────────┘  │      • Observation match  │
+                                   │      • Error scoring      │
+                                   └───────────────────────────┘
 ```
 
 **Data Flow:**
@@ -100,7 +103,7 @@ A self-contained weather forecasting application that combines predictions from 
 | Remember Location | On/Off | On |
 | Recent Locations | On/Off (up to 5 saved) | Off |
 | Quick Location Switch | On/Off | On |
-| Show Refresh Button | On/Off | Off |
+| Auto-Refresh Interval | 5, 10, 15, 30, 60 minutes | 5 minutes |
 
 ### Keyboard Shortcuts
 
@@ -109,17 +112,37 @@ A self-contained weather forecasting application that combines predictions from 
 | `C` | Switch to Celsius |
 | `F` | Switch to Fahrenheit |
 
+### Performance Optimizations
+
+- **DNS Prefetch**: Pre-resolves Open-Meteo API domains for faster initial requests
+- **React.memo**: Key components memoized to prevent unnecessary re-renders
+- **Request Deduplication**: Prevents duplicate API calls during rapid interactions
+- **Stale-While-Revalidate**: Shows cached data instantly while fetching fresh data
+- **Lazy Loading**: Settings and ModelComparison panels loaded on demand
+- **Forecast Caching**: 1-hour localStorage cache for instant app startup
+
 ---
 
 ## Technology Stack
 
+### Frontend
+
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| React | 19.2.0 | UI framework |
+| React | 19.2.0 | UI framework (with React.memo optimization) |
 | TypeScript | 5.9.3 | Type safety |
 | Vite | 7.3.x | Build tool |
 | Tauri | 2.x | Native app wrapper |
 | react-icons | 5.5.0 | Icon library |
+
+### Backend
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Python | 3.11+ | Runtime |
+| FastAPI | Latest | API framework |
+| SQLAlchemy | 2.x | Async ORM |
+| SQLite | - | Database |
 
 ### External APIs
 
@@ -172,6 +195,9 @@ weather-app/
 │   │   │   ├── weather.ts        # Temperature conversion
 │   │   │   └── preload.ts        # Lazy loading helpers
 │   │   │
+│   │   ├── constants/
+│   │   │   └── weather.ts        # WMO codes, conversions, thresholds
+│   │   │
 │   │   └── styles/
 │   │       ├── theme-futuristic.css
 │   │       ├── theme-glass.css
@@ -194,7 +220,15 @@ weather-app/
 │   ├── vite.config.ts
 │   └── tsconfig.json
 │
-├── backend/                      # Legacy (not required)
+├── backend/                      # Accuracy tracking service
+│   └── app/
+│       ├── main.py               # FastAPI entry point
+│       ├── constants.py          # Lead times, tolerances
+│       ├── routes/               # API endpoints
+│       ├── services/             # Business logic
+│       └── models/               # SQLAlchemy models
+│
+├── CLAUDE.md                     # Project reference for AI assistants
 ├── DOCUMENTATION.md
 ├── README.md
 └── LICENSE
@@ -316,6 +350,21 @@ confidence = 100 × e^(-spread / typical_spread)
 mode(codes) → number
 ```
 
+### Backend Services
+
+The backend handles forecast accuracy tracking by:
+
+1. **Snapshot Storage**: Storing forecast predictions at key lead times (24h, 48h, 72h, 120h, 168h)
+2. **Observation Matching**: Fetching actual weather data from Open-Meteo Archive API
+3. **Accuracy Calculation**: Non-linear scoring that progressively penalizes larger errors
+
+**Key Endpoints:**
+```
+GET /accuracy/{location_id}     # Get accuracy stats for a location
+POST /forecasts/snapshot        # Store a forecast snapshot
+GET /locations/saved            # List saved locations
+```
+
 ---
 
 ## Frontend Components
@@ -413,6 +462,10 @@ All localStorage keys prefixed with `weather-app-`:
 | `weather-app-remember-location` | boolean | true |
 | `weather-app-last-location` | JSON | null |
 | `weather-app-recent-locations` | JSON | [] |
+| `weather-app-show-recent` | boolean | false |
+| `weather-app-quick-switch` | boolean | true |
+| `weather-app-auto-refresh` | number | 5 |
+| `weather-app-forecast-cache` | JSON | null |
 
 ---
 
@@ -466,6 +519,12 @@ npm run build:tauri
 
 4. **Offline Mode**: Service worker caches static assets but weather data always requires network
 
+5. **US AQI Only**: Air quality uses US standard; European users see US scale
+
+6. **Single Location Cache**: Only the most recent location's forecast is cached in localStorage
+
+7. **Backend SQLite-Specific**: Accuracy service uses `julianday()` function; PostgreSQL migration requires query changes
+
 ---
 
 ## Debugging Tips
@@ -484,6 +543,21 @@ npm run build && ls -la dist/assets/
 
 # Clear localStorage (browser console)
 localStorage.clear()
+```
+
+### Backend
+
+```bash
+cd backend
+
+# Run development server
+uvicorn app.main:app --reload
+
+# Check imports work
+python3 -c "from app.main import app; print('OK')"
+
+# Enable SQL logging (in database.py)
+# engine = create_async_engine(url, echo=True)
 ```
 
 ### Tauri
