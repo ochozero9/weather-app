@@ -31,10 +31,36 @@
  * - No virtual scrolling for very long result lists (unlikely with limit=5)
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import type { GeocodingResult } from '../types/weather';
 import { geocodeLocation } from '../api/client';
+
+/** Conditionally wrap content in a portal with fixed positioning */
+function renderDropdown(
+  content: ReactNode,
+  usePortal: boolean,
+  position: { top: number; left: number; width: number },
+  inlineClass: string
+): ReactNode {
+  if (usePortal) {
+    return createPortal(
+      <div
+        style={{
+          position: 'fixed',
+          top: position.top,
+          left: position.left,
+          width: position.width,
+          zIndex: 99999,
+        }}
+      >
+        {content}
+      </div>,
+      document.body
+    );
+  }
+  return <div className={inlineClass}>{content}</div>;
+}
 
 interface LocationSearchProps {
   onLocationSelect: (location: GeocodingResult) => void;
@@ -234,88 +260,41 @@ export function LocationSearch({ onLocationSelect, initialValue = '', placeholde
         {loading && <span className="search-loading">...</span>}
       </div>
 
-      {showResults && results.length > 0 && (
-        usePortal ? createPortal(
-          <ul
-            ref={dropdownRef}
-            id="search-results"
-            className="search-results"
-            role="listbox"
-            aria-label="Location suggestions"
-            style={{
-              position: 'fixed',
-              top: dropdownPosition.top,
-              left: dropdownPosition.left,
-              width: dropdownPosition.width,
-              zIndex: 99999
-            }}
-          >
-            {results.map((result, index) => (
-              <li
-                key={`${result.latitude}-${result.longitude}-${index}`}
-                onClick={() => handleSelect(result)}
-                onMouseEnter={() => setSelectedIndex(index)}
-                className={index === selectedIndex ? 'selected' : ''}
-                role="option"
-                aria-selected={index === selectedIndex}
-              >
-                <span className="result-name">{result.name}</span>
-                <span className="result-details">
-                  {result.admin1 && `${result.admin1}, `}
-                  {result.country}
-                </span>
-              </li>
-            ))}
-          </ul>,
-          document.body
-        ) : (
-          <ul
-            ref={dropdownRef}
-            id="search-results"
-            className="search-results search-results-inline"
-            role="listbox"
-            aria-label="Location suggestions"
-          >
-            {results.map((result, index) => (
-              <li
-                key={`${result.latitude}-${result.longitude}-${index}`}
-                onClick={() => handleSelect(result)}
-                onMouseEnter={() => setSelectedIndex(index)}
-                className={index === selectedIndex ? 'selected' : ''}
-                role="option"
-                aria-selected={index === selectedIndex}
-              >
-                <span className="result-name">{result.name}</span>
-                <span className="result-details">
-                  {result.admin1 && `${result.admin1}, `}
-                  {result.country}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )
+      {showResults && results.length > 0 && renderDropdown(
+        <ul
+          ref={dropdownRef}
+          id="search-results"
+          className="search-results"
+          role="listbox"
+          aria-label="Location suggestions"
+        >
+          {results.map((result, index) => (
+            <li
+              key={`${result.latitude}-${result.longitude}-${index}`}
+              onClick={() => handleSelect(result)}
+              onMouseEnter={() => setSelectedIndex(index)}
+              className={index === selectedIndex ? 'selected' : ''}
+              role="option"
+              aria-selected={index === selectedIndex}
+            >
+              <span className="result-name">{result.name}</span>
+              <span className="result-details">
+                {result.admin1 && `${result.admin1}, `}
+                {result.country}
+              </span>
+            </li>
+          ))}
+        </ul>,
+        usePortal,
+        dropdownPosition,
+        'search-results-inline-wrapper'
       )}
 
-      {showResults && results.length === 0 && !loading && query.length >= 2 && (
-        usePortal ? createPortal(
-          <div
-            className="search-no-results"
-            style={{
-              position: 'fixed',
-              top: dropdownPosition.top,
-              left: dropdownPosition.left,
-              width: dropdownPosition.width,
-              zIndex: 99999
-            }}
-          >
-            No locations found
-          </div>,
-          document.body
-        ) : (
-          <div className="search-no-results search-no-results-inline">
-            No locations found
-          </div>
-        )
+      {showResults && results.length === 0 && !loading && query.length >= 2 && renderDropdown(
+        <div className="search-no-results">No locations found</div>,
+        usePortal,
+        dropdownPosition,
+        'search-no-results-inline-wrapper'
       )}
     </div>
   );

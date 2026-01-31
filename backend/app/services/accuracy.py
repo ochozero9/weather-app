@@ -27,10 +27,13 @@ Future Improvements:
 - [ ] Add accuracy decay over time visualization
 """
 
+import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -135,6 +138,10 @@ class AccuracyService:
         )
 
         if not historical or "hourly" not in historical:
+            logger.warning(
+                "Failed to fetch historical observations for location %s (%.4f, %.4f)",
+                location.id, location.latitude, location.longitude
+            )
             return
 
         hourly = historical["hourly"]
