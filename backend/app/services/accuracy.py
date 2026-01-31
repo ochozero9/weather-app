@@ -45,6 +45,11 @@ from app.models.database import (
 )
 from app.models.schemas import AccuracyBadge, AccuracyResponse, ModelAccuracy
 from app.services.open_meteo import open_meteo_client
+from app.constants import (
+    LEAD_HOURS_TO_STORE,
+    ACCURACY_TOLERANCES,
+    OBSERVATION_MATCH_TOLERANCE_DAYS,
+)
 
 
 class AccuracyService:
@@ -72,9 +77,7 @@ class AccuracyService:
         hourly_times = reference.get("hourly", {}).get("time", [])
 
         # Store snapshots for key lead times (24h, 48h, 72h, etc.)
-        lead_hours_to_store = [24, 48, 72, 120, 168]
-
-        for lead_hours in lead_hours_to_store:
+        for lead_hours in LEAD_HOURS_TO_STORE:
             if lead_hours >= len(hourly_times):
                 continue
 
@@ -250,7 +253,7 @@ class AccuracyService:
                 (func.abs(
                     func.julianday(ForecastSnapshot.target_time) -
                     func.julianday(Observation.observation_time)
-                ) < 0.042)  # 0.042 days ≈ 1 hour tolerance
+                ) < OBSERVATION_MATCH_TOLERANCE_DAYS)
             )
             .where(ForecastSnapshot.snapshot_time >= cutoff_date)
         )
@@ -274,13 +277,10 @@ class AccuracyService:
         model_scores: Dict[str, Dict[str, List[float]]] = {}
         ensemble_scores: List[float] = []
 
-        # Tolerances for accuracy calculation
-        # These define what error is considered "acceptable" for each metric
-        # Values are based on typical user expectations and industry standards
-        # Adjust these to change how strict/lenient accuracy scoring is
-        temp_tolerance = 2.0    # °C - most users notice >2°C errors
-        precip_tolerance = 1.0  # mm - precipitation is highly variable
-        wind_tolerance = 5.0    # km/h - wind gusts make this variable
+        # Tolerances from centralized constants
+        temp_tolerance = ACCURACY_TOLERANCES["temperature"]
+        precip_tolerance = ACCURACY_TOLERANCES["precipitation"]
+        wind_tolerance = ACCURACY_TOLERANCES["wind_speed"]
 
         for snapshot, observation in matches:
             lead = snapshot.lead_hours

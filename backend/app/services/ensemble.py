@@ -38,6 +38,7 @@ from app.models.schemas import (
     HourlyForecast,
 )
 from app.services.open_meteo import open_meteo_client
+from app.constants import TYPICAL_SPREADS
 
 
 class EnsembleCalculator:
@@ -119,15 +120,7 @@ class EnsembleCalculator:
         Future: Consider calibrating these values based on actual verification
         data to ensure confidence scores match real-world accuracy percentages.
         """
-        # Typical spreads derived from historical model disagreement analysis
-        # These are approximate values - adjust based on verification data
-        typical_spreads = {
-            "temperature": 3.0,     # °C - models typically agree within 3°C
-            "precipitation": 5.0,   # mm - high uncertainty for precip
-            "wind_speed": 5.0,      # km/h
-        }
-
-        typical = typical_spreads.get(metric_type, 3.0)
+        typical = TYPICAL_SPREADS.get(metric_type, 3.0)
 
         # Exponential decay: fast drop initially, asymptotes toward 0
         # See docstring above for exact values at key points
