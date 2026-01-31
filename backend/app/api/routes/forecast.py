@@ -76,14 +76,13 @@ def is_zip_code(query: str) -> bool:
     # Canadian postal code (letter-digit pattern)
     if len(clean) == 6 and clean[0].isalpha():
         return True
-    # UK postcode (various formats, starts with letters)
-    # WARNING: This is a very loose check and may match other formats
-    if len(clean) >= 5 and clean[:2].replace(" ", "")[0].isalpha():
-        # Check if it matches UK pattern loosely
-        has_digits = any(c.isdigit() for c in clean)
-        has_letters = any(c.isalpha() for c in clean)
-        if has_digits and has_letters:
-            return True
+    # UK postcode (e.g., SW1A1AA, M11AA, B338TH)
+    # Must start with 1-2 letters, followed by digit(s), then letters/digits
+    # This is stricter than before to reduce false positives like "Paris2024"
+    import re
+    uk_pattern = r'^[A-Za-z]{1,2}\d{1,2}[A-Za-z]?\d[A-Za-z]{2}$'
+    if re.match(uk_pattern, clean):
+        return True
     return False
 
 

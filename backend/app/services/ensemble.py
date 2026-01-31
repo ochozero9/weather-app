@@ -346,7 +346,10 @@ class EnsembleCalculator:
             raise ValueError("No model data available")
 
         reference_model = next(iter(model_data.values()))
-        time_str = reference_model["hourly"]["time"][hour_offset]
+        hourly_times = reference_model.get("hourly", {}).get("time", [])
+        if hour_offset >= len(hourly_times):
+            raise ValueError(f"hour_offset {hour_offset} exceeds available forecast hours ({len(hourly_times)})")
+        time_str = hourly_times[hour_offset]
 
         models = []
         for model_name, data in model_data.items():
