@@ -1,5 +1,5 @@
 import React from 'react';
-import { WEATHER_CODES } from '../types/weather';
+import { WEATHER_CODES } from '../constants/weather';
 import {
   WiDaySunny,
   WiNightClear,
