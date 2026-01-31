@@ -22,15 +22,57 @@ import { calculateEnsemble, buildModelComparison } from '../services/ensemble';
 import type { RawModelForecast } from '../services/openMeteo';
 
 // Cache raw model data for model comparison without re-fetching
-let cachedModelData: RawModelForecast[] | null = null;
+interface CachedModelData {
+  data: RawModelForecast[];
+  timestamp: number;
+  latitude: number;
+  longitude: number;
+}
+
+const MODEL_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+let cachedModelData: CachedModelData | null = null;
+let inFlightRequest: Promise<RawModelForecast[]> | null = null;
+let inFlightCoords: { lat: number; lon: number } | null = null;
+
+function isModelCacheValid(lat: number, lon: number): boolean {
+  if (!cachedModelData) return false;
+  const isExpired = Date.now() - cachedModelData.timestamp > MODEL_CACHE_TTL_MS;
+  const isSameLocation =
+    Math.abs(cachedModelData.latitude - lat) <= 0.01 &&
+    Math.abs(cachedModelData.longitude - lon) <= 0.01;
+  return !isExpired && isSameLocation;
+}
 
 export async function getForecast(lat: number, lon: number): Promise<EnsembleForecast> {
+  // Reuse in-flight request for same coordinates to prevent race conditions
+  const isSameCoords = inFlightCoords &&
+    Math.abs(inFlightCoords.lat - lat) <= 0.01 &&
+    Math.abs(inFlightCoords.lon - lon) <= 0.01;
+
+  let modelDataPromise: Promise<RawModelForecast[]>;
+  if (inFlightRequest && isSameCoords) {
+    modelDataPromise = inFlightRequest;
+  } else {
+    inFlightCoords = { lat, lon };
+    inFlightRequest = fetchAllModels(lat, lon);
+    modelDataPromise = inFlightRequest;
+  }
+
   const [modelData, airQuality] = await Promise.all([
-    fetchAllModels(lat, lon),
+    modelDataPromise,
     fetchAirQuality(lat, lon),
   ]);
 
-  cachedModelData = modelData;
+  // Clear in-flight tracking
+  inFlightRequest = null;
+  inFlightCoords = null;
+
+  cachedModelData = {
+    data: modelData,
+    timestamp: Date.now(),
+    latitude: lat,
+    longitude: lon,
+  };
   return calculateEnsemble(modelData, airQuality);
 }
 
@@ -39,15 +81,18 @@ export async function getModelComparison(
   lon: number,
   hourOffset = 0
 ): Promise<ModelComparison> {
-  // Use cached data if available for the same location
-  let modelData = cachedModelData;
-  if (
-    !modelData ||
-    Math.abs(modelData[0].latitude - lat) > 0.01 ||
-    Math.abs(modelData[0].longitude - lon) > 0.01
-  ) {
+  // Use cached data if valid (same location and not expired)
+  let modelData: RawModelForecast[];
+  if (isModelCacheValid(lat, lon)) {
+    modelData = cachedModelData!.data;
+  } else {
     modelData = await fetchAllModels(lat, lon);
-    cachedModelData = modelData;
+    cachedModelData = {
+      data: modelData,
+      timestamp: Date.now(),
+      latitude: lat,
+      longitude: lon,
+    };
   }
   return buildModelComparison(modelData, hourOffset);
 }
