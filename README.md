@@ -2,35 +2,68 @@
 
 A self-contained, multi-model ensemble weather forecasting application that combines predictions from 6 different weather models to provide more accurate forecasts with confidence scoring.
 
-**Live Demo:** https://ochozero9.github.io/weather-app/
+**Version:** 1.1.0
 
-## Platforms
+## Live Demo & Downloads
 
-| Platform | Description |
-|----------|-------------|
-| **Web** | Runs in any browser, hosted on GitHub Pages |
-| **macOS** | Native app via Tauri (~8MB, uses system WebView) |
+| Platform | Link | Status |
+|----------|------|--------|
+| **Web App (PWA)** | [https://ochozero9.github.io/weather-app/](https://ochozero9.github.io/weather-app/) | Live |
+| **macOS App** | Build locally with `npm run build:tauri` | Local build |
+| **iOS** | Add web app to home screen | PWA |
+| **Android** | Add web app to home screen | PWA |
+
+## Export & Deployment Options
+
+| Method | Command | Output |
+|--------|---------|--------|
+| **Web (GitHub Pages)** | `npm run deploy` | Deploys to GitHub Pages |
+| **Web (Static)** | `npm run build:web` | `dist/` folder - host anywhere |
+| **macOS App** | `npm run build:tauri` | `src-tauri/target/release/bundle/dmg/Weather_*.dmg` |
+| **Full Release** | `npm run release` | GitHub Pages + macOS DMG |
 
 ## Features
 
-- **Multi-Model Ensemble Forecasting** - Combines GFS, ECMWF, ICON, GEM, JMA, and Meteo-France models
-- **Confidence Scoring** - Shows prediction reliability based on model agreement
-- **Current Conditions** - Temperature, humidity, wind, precipitation, UV index, air quality
-- **7-Day Forecast** - Hourly and daily views with interactive graphs
-- **Model Comparison** - Side-by-side view of individual model predictions
-- **Multiple Themes** - Default, Futuristic (dark), Glass (frosted), OLED (pure black)
-- **4 Icon Styles** - Emoji, Weather Icons, Meteocons, Filled SVG
-- **Location Search** - City names, ZIP codes (US, UK, Canada)
-- **Offline Support** - Service worker caches static assets
-- **No Backend Required** - All API calls and calculations happen in the browser
+### Core Forecasting
+- **Multi-Model Ensemble** - Combines GFS, ECMWF, ICON, GEM, JMA, and Meteo-France models
+- **Confidence Scoring** - Shows prediction reliability based on model agreement (color-coded)
+- **Current Conditions** - Temperature, feels like, humidity, wind, precipitation, UV index
+- **10-Day Forecast** - Daily high/low temps with precipitation probability
+- **Interactive Timeline** - Scrub through 240 hours of forecast with elastic overscroll
+- **Hourly Graph** - Visualize temperature, precipitation, snow, and wind
+
+### Reliability & Performance
+- **Auto-Refresh** - Configurable intervals: 5, 10, 15, 30, or 60 minutes
+- **Offline Support** - Shows cached forecast when offline with visual indicator
+- **Retry Logic** - Exponential backoff for failed API requests
+- **Loading Skeleton** - Smooth loading state on initial launch
+- **Forecast Caching** - Instant display of last forecast while refreshing
+
+### Privacy
+- **No Data Collection** - Zero analytics, tracking, or cookies
+- **No Account Required** - All data stored locally in browser
+- **Open Source** - Full transparency on data handling
+
+### Customization
+- **4 Themes** - Classic, Dark, Glass (frosted), OLED (pure black)
+- **4 Icon Styles** - Meteocons, Filled, Classic, Emoji
+- **Temperature Units** - Celsius/Fahrenheit (keyboard shortcuts: C/F)
+- **Location Management** - Save up to 5 recent locations with quick switch
+
+### UX Polish
+- **iOS Safe Area** - Proper spacing for home indicator
+- **Non-Selectable Text** - Native app-like feel
+- **Elastic Dial** - Rubber band effect when scrolling past bounds
+- **Model Comparison** - Developer view of individual model predictions
 
 ## Tech Stack
 
 | Component | Technology |
 |-----------|------------|
-| Frontend | React 19, TypeScript, Vite |
+| Frontend | React 19, TypeScript, Vite 7 |
 | Native App | Tauri 2 (Rust + system WebView) |
 | Data Source | [Open-Meteo API](https://open-meteo.com) (free, no API key) |
+| Geocoding | Open-Meteo + Zippopotam.us |
 | Storage | Browser localStorage |
 | Hosting | GitHub Pages |
 
@@ -48,23 +81,24 @@ Open `http://localhost:5173` in your browser.
 
 ### Build & Deploy
 
-| Command | Description |
-|---------|-------------|
-| `npm run release` | Deploy to GitHub Pages AND build macOS app |
-| `npm run deploy` | Deploy to GitHub Pages only |
-| `npm run build:tauri` | Build macOS .dmg only |
-| `npm run build:web` | Build for web (no deploy) |
+```bash
+# Deploy to GitHub Pages
+npm run deploy
 
-After `npm run release`:
-- **Web:** Updated at https://ochozero9.github.io/weather-app/
-- **macOS:** DMG at `src-tauri/target/release/bundle/dmg/Weather_*.dmg`
+# Build macOS app only
+npm run build:tauri
+
+# Full release (web + macOS)
+npm run release
+```
 
 ## How It Works
 
 1. **Fetches 6 weather models in parallel** from Open-Meteo (free, no API key)
 2. **Combines predictions** using weighted averaging (ECMWF weighted highest at 1.2)
 3. **Calculates confidence** from model spread using exponential decay
-4. **Displays ensemble forecast** with hourly/daily views and interactive graphs
+4. **Caches forecast** locally for offline access and instant display
+5. **Auto-refreshes** at user-configured intervals
 
 All computation happens client-side in TypeScript.
 
@@ -74,21 +108,17 @@ All computation happens client-side in TypeScript.
 weather-app/
 ├── frontend/
 │   ├── src/
-│   │   ├── services/         # Open-Meteo client + ensemble calculator
-│   │   ├── api/              # API client layer
 │   │   ├── components/       # React components
-│   │   ├── hooks/            # Custom hooks
+│   │   ├── hooks/            # Custom hooks (useWeather)
+│   │   ├── services/         # Open-Meteo client + ensemble calculator
+│   │   ├── styles/           # Theme CSS files
 │   │   ├── types/            # TypeScript interfaces
-│   │   ├── utils/            # Storage, conversions
-│   │   └── styles/           # Theme CSS
+│   │   └── utils/            # Storage, conversions, weather helpers
 │   ├── src-tauri/            # Tauri native app config
-│   │   ├── src/              # Rust entry point
-│   │   ├── icons/            # App icons
-│   │   └── tauri.conf.json   # Tauri config
 │   └── package.json
-│
-├── backend/                  # Legacy backend (not required)
-├── DOCUMENTATION.md          # Full technical documentation
+├── backend/                  # Legacy (not required)
+├── CHANGELOG.md              # Version history
+├── DOCUMENTATION.md          # Technical documentation
 ├── LICENSE
 └── README.md
 ```
@@ -101,17 +131,38 @@ weather-app/
 
 ### Native App (Tauri)
 - All of the above, plus:
-- Rust (install via `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`)
-- Xcode Command Line Tools (macOS)
+- Rust: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+- Xcode Command Line Tools (macOS): `xcode-select --install`
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for full version history.
+
+### v1.1.0 (2026-01-31)
+
+**Features**
+- Auto-refresh with configurable intervals (5-60 min)
+- Loading skeleton for initial launch
+- Forecast caching with stale data indicator
+- Offline detection with banner notification
+- Retry logic with exponential backoff
+- Elastic overscroll on timeline dial
+- Privacy section in Settings
+- Debug toggle for error states
+
+**Improvements**
+- Increased dial height with iOS safe area support
+- Non-selectable text for app-like feel
+- Fixed precipitation icon in 10-day forecast
+- Fixed confidence pill colors in glass theme
+- Fixed duplicate day names in forecast
+
+**Removed**
+- Pull-to-refresh (replaced by auto-refresh)
 
 ## Documentation
 
-See [DOCUMENTATION.md](DOCUMENTATION.md) for complete technical documentation including:
-- Architecture and data flow
-- Ensemble algorithm details
-- Component documentation
-- Configuration options
-- Debugging tips
+See [DOCUMENTATION.md](DOCUMENTATION.md) for complete technical documentation.
 
 ## Author
 
@@ -119,10 +170,10 @@ Built by **marcox** ([@ochozero9](https://github.com/ochozero9))
 
 ## License
 
-This project is released under a **free use, non-commercial license**. See [LICENSE](LICENSE) for details.
+**Free use, non-commercial license.** See [LICENSE](LICENSE).
 
-You are free to:
-- Use this software for personal or educational purposes
+You may:
+- Use for personal or educational purposes
 - Modify and adapt the code
 - Share with others
 
@@ -132,4 +183,4 @@ You may not:
 
 ---
 
-*Built with the assistance of [Claude](https://claude.ai) (Opus 4.5)*
+*Built with [Claude](https://claude.ai) (Opus 4.5)*
