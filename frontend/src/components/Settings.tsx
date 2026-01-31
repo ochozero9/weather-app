@@ -9,7 +9,7 @@ const ModelComparison = lazy(() => import('./ModelComparison').then(m => ({ defa
 import type { IconStyle } from './WeatherIcon';
 import type { GeocodingResult, EnsembleForecast } from '../types/weather';
 import type { TempUnit } from '../utils/weather';
-import type { Theme } from '../utils/storage';
+import type { Theme, AutoRefreshInterval } from '../utils/storage';
 
 interface SettingsProps {
   // Location
@@ -18,14 +18,14 @@ interface SettingsProps {
   rememberLocation: boolean;
   showRecentLocations: boolean;
   quickSwitch: boolean;
-  showRefreshButton: boolean;
+  autoRefreshInterval: AutoRefreshInterval;
   onLocationSelect: (location: GeocodingResult) => void;
   onRecentLocationSelect: (location: GeocodingResult) => void;
   onRemoveRecentLocation: (location: GeocodingResult, e: React.MouseEvent) => void;
   onRememberLocationChange: (value: boolean) => void;
   onShowRecentLocationsChange: (value: boolean) => void;
   onQuickSwitchChange: (value: boolean) => void;
-  onShowRefreshButtonChange: (value: boolean) => void;
+  onAutoRefreshIntervalChange: (interval: AutoRefreshInterval) => void;
   // Temperature
   tempUnit: TempUnit;
   onTempUnitChange: (unit: TempUnit) => void;
@@ -38,6 +38,9 @@ interface SettingsProps {
   // Developer
   forecast: EnsembleForecast | null;
   onResetOnboarding: () => void;
+  // Debug
+  debugErrorStates: boolean;
+  onDebugErrorStatesChange: (value: boolean) => void;
 }
 
 export function Settings({
@@ -46,14 +49,14 @@ export function Settings({
   rememberLocation,
   showRecentLocations,
   quickSwitch,
-  showRefreshButton,
+  autoRefreshInterval,
   onLocationSelect,
   onRecentLocationSelect,
   onRemoveRecentLocation,
   onRememberLocationChange,
   onShowRecentLocationsChange,
   onQuickSwitchChange,
-  onShowRefreshButtonChange,
+  onAutoRefreshIntervalChange,
   tempUnit,
   onTempUnitChange,
   theme,
@@ -62,6 +65,8 @@ export function Settings({
   onIconStyleChange,
   forecast,
   onResetOnboarding,
+  debugErrorStates,
+  onDebugErrorStatesChange,
 }: SettingsProps) {
   const [showModelComparison, setShowModelComparison] = useState(false);
   const [showDeveloperMenu, setShowDeveloperMenu] = useState(false);
@@ -119,18 +124,6 @@ export function Settings({
                 <span className="toggle-switch-knob" />
               </button>
             </label>
-
-            <label className="settings-toggle">
-              <span className="settings-toggle-label">Allow pull to refresh</span>
-              <button
-                className={`toggle-switch ${showRefreshButton ? 'active' : ''}`}
-                onClick={() => onShowRefreshButtonChange(!showRefreshButton)}
-                role="switch"
-                aria-checked={showRefreshButton}
-              >
-                <span className="toggle-switch-knob" />
-              </button>
-            </label>
           </div>
 
           {showRecentLocations && recentLocations.length > 0 && (
@@ -159,6 +152,21 @@ export function Settings({
               </ul>
             </div>
           )}
+        </div>
+
+        <div className="settings-section">
+          <h3 className="settings-section-title">Auto Refresh</h3>
+          <div className="settings-refresh-options">
+            {([5, 10, 15, 30, 60] as const).map((interval) => (
+              <button
+                key={interval}
+                className={`settings-refresh-btn ${autoRefreshInterval === interval ? 'active' : ''}`}
+                onClick={() => onAutoRefreshIntervalChange(interval)}
+              >
+                {interval} min
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="settings-section">
@@ -258,6 +266,22 @@ export function Settings({
           </div>
         </div>
 
+        <div className="settings-section">
+          <h3 className="settings-section-title">Privacy</h3>
+          <div className="privacy-notice">
+            <p className="privacy-statement">This app collects no data.</p>
+            <ul className="privacy-list">
+              <li>No analytics or tracking</li>
+              <li>No cookies</li>
+              <li>No data sent to third parties</li>
+              <li>All preferences stored locally on your device</li>
+            </ul>
+            <p className="privacy-detail">
+              The only external requests are to Open-Meteo (weather data) and Zippopotam.us (ZIP code lookup).
+            </p>
+          </div>
+        </div>
+
         <div className="settings-section settings-section-developer">
           <button
             className="developer-menu-toggle"
@@ -323,10 +347,24 @@ export function Settings({
 
               <div className="developer-subsection">
                 <h4 className="developer-subsection-title">Debug</h4>
+
+                <label className="settings-toggle">
+                  <span className="settings-toggle-label">Show error states (offline + stale)</span>
+                  <button
+                    className={`toggle-switch ${debugErrorStates ? 'active' : ''}`}
+                    onClick={() => onDebugErrorStatesChange(!debugErrorStates)}
+                    role="switch"
+                    aria-checked={debugErrorStates}
+                  >
+                    <span className="toggle-switch-knob" />
+                  </button>
+                </label>
+                <p className="settings-hint">Displays offline banner and stale data banner for visual testing</p>
+
                 <button
                   className="toggle-models-btn"
                   onClick={onResetOnboarding}
-                  style={{ background: '#ef4444' }}
+                  style={{ background: '#ef4444', marginTop: '1rem' }}
                 >
                   Reset & Show Onboarding
                 </button>

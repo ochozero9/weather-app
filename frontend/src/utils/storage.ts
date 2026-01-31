@@ -1,4 +1,4 @@
-import type { GeocodingResult } from '../types/weather';
+import type { GeocodingResult, EnsembleForecast } from '../types/weather';
 import type { TempUnit } from './weather';
 import type { IconStyle } from '../components/WeatherIcon';
 
@@ -11,7 +11,8 @@ const REMEMBER_LOCATION_KEY = 'weather-app-remember-location';
 const RECENT_LOCATIONS_KEY = 'weather-app-recent-locations';
 const SHOW_RECENT_KEY = 'weather-app-show-recent';
 const QUICK_SWITCH_KEY = 'weather-app-quick-switch';
-const SHOW_REFRESH_KEY = 'weather-app-show-refresh';
+const AUTO_REFRESH_KEY = 'weather-app-auto-refresh';
+const FORECAST_CACHE_KEY = 'weather-app-forecast-cache';
 const MAX_RECENT_LOCATIONS = 5;
 
 // Theme
@@ -133,19 +134,29 @@ export function saveQuickSwitch(enabled: boolean): void {
   }
 }
 
-// Show refresh button setting
-export function loadShowRefresh(): boolean {
+// Auto-refresh interval (in minutes)
+export type AutoRefreshInterval = 5 | 10 | 15 | 30 | 60;
+
+const VALID_INTERVALS: AutoRefreshInterval[] = [5, 10, 15, 30, 60];
+
+export function loadAutoRefreshInterval(): AutoRefreshInterval {
   try {
-    const saved = localStorage.getItem(SHOW_REFRESH_KEY);
-    return saved === 'true';
+    const saved = localStorage.getItem(AUTO_REFRESH_KEY);
+    if (saved) {
+      const parsed = parseInt(saved, 10);
+      if (VALID_INTERVALS.includes(parsed as AutoRefreshInterval)) {
+        return parsed as AutoRefreshInterval;
+      }
+    }
   } catch {
-    return false;
+    // Ignore errors
   }
+  return 5; // Default to 5 minutes
 }
 
-export function saveShowRefresh(show: boolean): void {
+export function saveAutoRefreshInterval(interval: AutoRefreshInterval): void {
   try {
-    localStorage.setItem(SHOW_REFRESH_KEY, String(show));
+    localStorage.setItem(AUTO_REFRESH_KEY, String(interval));
   } catch {
     // Ignore storage errors
   }
@@ -208,5 +219,46 @@ export function clearLocationData(): void {
     localStorage.removeItem(RECENT_LOCATIONS_KEY);
   } catch {
     // Ignore storage errors
+  }
+}
+
+// Forecast cache
+interface CachedForecast {
+  forecast: EnsembleForecast;
+  timestamp: number;
+  locationKey: string;
+}
+
+const CACHE_MAX_AGE_MS = 60 * 60 * 1000; // 1 hour max age for cache
+
+export function loadCachedForecast(lat: number, lon: number): EnsembleForecast | null {
+  try {
+    const saved = localStorage.getItem(FORECAST_CACHE_KEY);
+    if (saved) {
+      const cached: CachedForecast = JSON.parse(saved);
+      const locationKey = `${lat.toFixed(2)},${lon.toFixed(2)}`;
+
+      // Check if cache is for the same location and not too old
+      if (cached.locationKey === locationKey &&
+          Date.now() - cached.timestamp < CACHE_MAX_AGE_MS) {
+        return cached.forecast;
+      }
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return null;
+}
+
+export function saveForecastCache(forecast: EnsembleForecast): void {
+  try {
+    const cached: CachedForecast = {
+      forecast,
+      timestamp: Date.now(),
+      locationKey: `${forecast.location.latitude.toFixed(2)},${forecast.location.longitude.toFixed(2)}`
+    };
+    localStorage.setItem(FORECAST_CACHE_KEY, JSON.stringify(cached));
+  } catch {
+    // Ignore storage errors (e.g., quota exceeded)
   }
 }

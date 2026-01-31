@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useWeather } from './hooks/useWeather';
 import { LocationSearch } from './components/LocationSearch';
 import { UnifiedWeather } from './components/UnifiedWeather';
-import { PullToRefresh } from './components/PullToRefresh';
+import { WeatherSkeleton } from './components/WeatherSkeleton';
 
 // Lazy load Settings - only loaded when user opens settings
 const Settings = lazy(() => import('./components/Settings').then(m => ({ default: m.Settings })));
@@ -11,6 +11,7 @@ import type { GeocodingResult } from './types/weather';
 import type { TempUnit } from './utils/weather';
 import {
   type Theme,
+  type AutoRefreshInterval,
   loadSavedTheme,
   saveTheme,
   loadSavedUnit,
@@ -23,8 +24,8 @@ import {
   saveShowRecent,
   loadQuickSwitch,
   saveQuickSwitch,
-  loadShowRefresh,
-  saveShowRefresh,
+  loadAutoRefreshInterval,
+  saveAutoRefreshInterval,
   loadRecentLocations,
   saveRecentLocations,
   addToRecentLocations,
@@ -58,11 +59,11 @@ function getCurrentHourIndex(hourly: { time: string }[]): number {
 }
 
 function App() {
-  const { forecast, loading, error, fetchForecast } = useWeather();
+  const { forecast, loading, isRefreshing, isStale, isOffline, error, fetchForecast, loadFromCache, retry } = useWeather();
   const [rememberLocation, setRememberLocation] = useState(loadRememberLocation);
   const [showRecentLocations, setShowRecentLocations] = useState(loadShowRecent);
   const [quickSwitch, setQuickSwitch] = useState(loadQuickSwitch);
-  const [showRefreshButton, setShowRefreshButton] = useState(loadShowRefresh);
+  const [autoRefreshInterval, setAutoRefreshInterval] = useState<AutoRefreshInterval>(loadAutoRefreshInterval);
   const [recentLocations, setRecentLocations] = useState<GeocodingResult[]>(loadRecentLocations);
   const [selectedLocation, setSelectedLocation] = useState<GeocodingResult | null>(() =>
     loadRememberLocation() ? loadSavedLocation() : null
@@ -71,6 +72,7 @@ function App() {
   const [tempUnit, setTempUnit] = useState<TempUnit>(loadSavedUnit);
   const [iconStyle, setIconStyle] = useState<IconStyle>(loadSavedIconStyle);
   const [showSettings, setShowSettings] = useState(false);
+  const [debugErrorStates, setDebugErrorStates] = useState(false);
   const initialFetchDone = useRef(false);
 
   // Apply theme to document
@@ -116,10 +118,22 @@ function App() {
     saveQuickSwitch(quickSwitch);
   }, [quickSwitch]);
 
-  // Save show refresh button setting
+  // Save auto-refresh interval setting
   useEffect(() => {
-    saveShowRefresh(showRefreshButton);
-  }, [showRefreshButton]);
+    saveAutoRefreshInterval(autoRefreshInterval);
+  }, [autoRefreshInterval]);
+
+  // Auto-refresh timer
+  useEffect(() => {
+    if (!selectedLocation) return;
+
+    const intervalMs = autoRefreshInterval * 60 * 1000;
+    const timer = setInterval(() => {
+      fetchForecast(selectedLocation.latitude, selectedLocation.longitude);
+    }, intervalMs);
+
+    return () => clearInterval(timer);
+  }, [selectedLocation, autoRefreshInterval, fetchForecast]);
 
   // Keyboard shortcuts for temperature unit
   useEffect(() => {
@@ -139,12 +153,17 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Fetch weather for saved location on startup
+  // Load cached forecast and fetch fresh data on startup
   useEffect(() => {
     if (initialFetchDone.current || !selectedLocation) return;
     initialFetchDone.current = true;
+
+    // Try to load from cache first for instant display
+    loadFromCache(selectedLocation.latitude, selectedLocation.longitude);
+
+    // Then fetch fresh data
     fetchForecast(selectedLocation.latitude, selectedLocation.longitude);
-  }, [selectedLocation, fetchForecast]);
+  }, [selectedLocation, fetchForecast, loadFromCache]);
 
   const handleLocationSelect = async (location: GeocodingResult) => {
     setSelectedLocation(location);
@@ -189,12 +208,6 @@ function App() {
     }
   };
 
-  const handlePullRefresh = useCallback(async () => {
-    if (selectedLocation) {
-      await fetchForecast(selectedLocation.latitude, selectedLocation.longitude);
-    }
-  }, [selectedLocation, fetchForecast]);
-
   const handleResetOnboarding = () => {
     // Clear all location data
     setSelectedLocation(null);
@@ -236,7 +249,12 @@ function App() {
               />
             </div>
             {loading && <p className="onboarding-loading">Loading forecast...</p>}
-            {error && <p className="onboarding-error">{error}</p>}
+            {error && (
+              <div className="onboarding-error">
+                <p>{error}</p>
+                <button className="retry-btn" onClick={retry}>Try Again</button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -244,43 +262,44 @@ function App() {
       {/* Main App (hidden during onboarding) */}
       {!isOnboarding && (
         <>
+      {/* Offline Banner */}
+      {(isOffline || debugErrorStates) && (
+        <div className="offline-banner">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="1" y1="1" x2="23" y2="23" />
+            <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" />
+            <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" />
+            <path d="M10.71 5.05A16 16 0 0 1 22.58 9" />
+            <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88" />
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+            <line x1="12" y1="20" x2="12.01" y2="20" />
+          </svg>
+          <span>You're offline</span>
+        </div>
+      )}
+
+      {/* Stale Data Banner */}
+      {((isStale && !isOffline && !isRefreshing) || debugErrorStates) && forecast && (
+        <div className="stale-banner">
+          <span>Showing cached data</span>
+          <button className="stale-refresh-btn" onClick={retry}>Refresh</button>
+        </div>
+      )}
+
       <main className="app-main">
-        {showRefreshButton ? (
-          <PullToRefresh onRefresh={handlePullRefresh} disabled={!selectedLocation}>
-            <div className="tab-content">
-              {loading && !forecast && <div className="loading-state">Loading forecast...</div>}
-              {error && !forecast && <div className="error-state">{error}</div>}
+        <div className="tab-content">
+          {/* Show skeleton when loading without any data */}
+          {loading && !forecast && <WeatherSkeleton />}
 
-              {forecast && (
-                <UnifiedWeather
-                  hourly={forecast.hourly.slice(getCurrentHourIndex(forecast.hourly))}
-                  daily={forecast.daily}
-                  current={forecast.current}
-                  unit={tempUnit}
-                  iconStyle={iconStyle}
-                  locationName={selectedLocation ? `${selectedLocation.name}, ${selectedLocation.country}` : undefined}
-                  modelSpread={forecast.model_spread}
-                  selectedLocation={selectedLocation ?? undefined}
-                  recentLocations={recentLocations}
-                  quickSwitch={quickSwitch}
-                  onLocationSelect={handleRecentLocationSelect}
-                  onSettingsClick={showSettings ? undefined : () => setShowSettings(true)}
-                />
-              )}
-
-              {!forecast && !loading && !error && (
-                <div className="empty-state">
-                  <p>Search for a location in Settings to see the weather</p>
-                </div>
-              )}
+          {error && !forecast && (
+            <div className="error-state">
+              <p>{error}</p>
+              <button className="retry-btn" onClick={retry}>Try Again</button>
             </div>
-          </PullToRefresh>
-        ) : (
-          <div className="tab-content">
-            {loading && !forecast && <div className="loading-state">Loading forecast...</div>}
-            {error && !forecast && <div className="error-state">{error}</div>}
+          )}
 
-            {forecast && (
+          {forecast && (
+            <div className={`weather-content ${isRefreshing ? 'is-refreshing' : ''}`}>
               <UnifiedWeather
                 hourly={forecast.hourly.slice(getCurrentHourIndex(forecast.hourly))}
                 daily={forecast.daily}
@@ -297,15 +316,15 @@ function App() {
                 onRefresh={handleRefresh}
                 onSettingsClick={showSettings ? undefined : () => setShowSettings(true)}
               />
-            )}
+            </div>
+          )}
 
-            {!forecast && !loading && !error && (
-              <div className="empty-state">
-                <p>Search for a location in Settings to see the weather</p>
-              </div>
-            )}
-          </div>
-        )}
+          {!forecast && !loading && !error && (
+            <div className="empty-state">
+              <p>Search for a location in Settings to see the weather</p>
+            </div>
+          )}
+        </div>
       </main>
 
       {/* Settings Close Button */}
@@ -331,14 +350,14 @@ function App() {
             rememberLocation={rememberLocation}
             showRecentLocations={showRecentLocations}
             quickSwitch={quickSwitch}
-            showRefreshButton={showRefreshButton}
+            autoRefreshInterval={autoRefreshInterval}
             onLocationSelect={handleLocationSelect}
             onRecentLocationSelect={handleRecentLocationSelect}
             onRemoveRecentLocation={handleRemoveRecentLocation}
             onRememberLocationChange={setRememberLocation}
             onShowRecentLocationsChange={setShowRecentLocations}
             onQuickSwitchChange={setQuickSwitch}
-            onShowRefreshButtonChange={setShowRefreshButton}
+            onAutoRefreshIntervalChange={setAutoRefreshInterval}
             tempUnit={tempUnit}
             onTempUnitChange={setTempUnit}
             theme={theme}
@@ -347,6 +366,8 @@ function App() {
             onIconStyleChange={setIconStyle}
             forecast={forecast}
             onResetOnboarding={handleResetOnboarding}
+            debugErrorStates={debugErrorStates}
+            onDebugErrorStatesChange={setDebugErrorStates}
           />
         </Suspense>
       )}
