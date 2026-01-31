@@ -2631,7 +2631,7 @@ input, select, button {
 
 .forecast-card-floating {
   position: fixed;
-  bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
   left: 0;
   right: 0;
   padding: 0.75rem 1rem 0.5rem;
@@ -2759,7 +2759,7 @@ input, select, button {
 /* Back to Now button - left of scrubber */
 .back-to-now-btn {
   position: fixed;
-  bottom: calc(48px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
   left: 0.75rem;
   display: flex;
   align-items: center;
@@ -2822,7 +2822,7 @@ input, select, button {
   bottom: 0;
   left: 0;
   right: 0;
-  height: calc(100px + env(safe-area-inset-bottom, 0px));
+  height: calc(72px + env(safe-area-inset-bottom, 0px));
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -2832,7 +2832,8 @@ input, select, button {
   touch-action: pan-x;
   user-select: none;
   z-index: 90;
-  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  padding-top: 8px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
 }
 
 .timeline-dial:active {
@@ -2952,7 +2953,7 @@ input, select, button {
 .timeline-content {
   flex: 1;
   padding: 1.5rem;
-  padding-bottom: 105px; /* Space for fixed dial */
+  padding-bottom: 80px; /* Space for fixed dial */
   overflow-y: auto;
 }
 
