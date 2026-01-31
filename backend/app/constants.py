@@ -23,19 +23,6 @@ ACCURACY_TOLERANCES = {
 }
 
 # ============================================
-# Confidence Calculation
-# ============================================
-
-# Typical spread values for confidence calculation
-# These are derived from historical model disagreement analysis
-# Confidence = 100 * e^(-spread / typical_spread)
-TYPICAL_SPREADS = {
-    "temperature": 3.0,     # °C - models typically agree within 3°C
-    "precipitation": 5.0,   # mm - high uncertainty for precip
-    "wind_speed": 5.0,      # km/h
-}
-
-# ============================================
 # Cache & Timing
 # ============================================
 

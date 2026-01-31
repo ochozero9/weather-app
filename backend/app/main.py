@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import init_db
-from app.api.routes import forecast, locations, accuracy
+from app.api.routes import locations, accuracy
 from app.services.open_meteo import open_meteo_client
 
 
@@ -43,8 +43,7 @@ app.add_middleware(
     allow_headers=["Content-Type", "Accept"],
 )
 
-# Include routers
-app.include_router(forecast.router, prefix="/api")
+# Include routers (frontend is serverless, backend only handles DB operations)
 app.include_router(locations.router, prefix="/api")
 app.include_router(accuracy.router, prefix="/api")
 
