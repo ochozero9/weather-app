@@ -267,8 +267,10 @@ class EnsembleCalculator:
             weather_codes = self._extract_model_values(model_data, "daily", "weather_code", i)
 
             # Get sunrise/sunset from reference model (same for all models)
-            sunrise = reference_model.get("daily", {}).get("sunrise", [None] * 10)[i]
-            sunset = reference_model.get("daily", {}).get("sunset", [None] * 10)[i]
+            sunrise_arr = reference_model.get("daily", {}).get("sunrise", [])
+            sunset_arr = reference_model.get("daily", {}).get("sunset", [])
+            sunrise = sunrise_arr[i] if i < len(sunrise_arr) else None
+            sunset = sunset_arr[i] if i < len(sunset_arr) else None
 
             temp_max_avg, temp_max_spread = self._weighted_average(temp_maxs)
             temp_min_avg, _ = self._weighted_average(temp_mins)

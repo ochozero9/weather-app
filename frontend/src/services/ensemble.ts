@@ -99,6 +99,9 @@ export function calculateEnsemble(
   modelData: RawModelForecast[],
   airQuality: AirQualityData | null
 ): EnsembleForecast {
+  if (modelData.length === 0) {
+    throw new Error('No model data available for ensemble calculation');
+  }
   const models = modelData.map((d) => d.model);
   const ref = modelData[0]; // Reference model for time arrays & location
 
