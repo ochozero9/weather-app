@@ -2,7 +2,7 @@
 
 A self-contained, multi-model ensemble weather forecasting application that combines predictions from 6 different weather models to provide more accurate forecasts with confidence scoring.
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 
 ## Live Demo & Downloads
 
@@ -38,6 +38,9 @@ A self-contained, multi-model ensemble weather forecasting application that comb
 - **Retry Logic** - Exponential backoff for failed API requests
 - **Loading Skeleton** - Smooth loading state on initial launch
 - **Forecast Caching** - Instant display of last forecast while refreshing
+- **Optimized Rendering** - React.memo() on key components to prevent unnecessary re-renders
+- **DNS Prefetch** - Pre-resolved API connections for faster initial load
+- **Request Deduplication** - Prevents duplicate API calls during rapid interactions
 
 ### Privacy
 - **No Data Collection** - Zero analytics, tracking, or cookies
@@ -108,7 +111,9 @@ All computation happens client-side in TypeScript.
 weather-app/
 ├── frontend/
 │   ├── src/
+│   │   ├── api/              # API client with caching & deduplication
 │   │   ├── components/       # React components
+│   │   ├── constants/        # Weather codes, conversions
 │   │   ├── hooks/            # Custom hooks (useWeather)
 │   │   ├── services/         # Open-Meteo client + ensemble calculator
 │   │   ├── styles/           # Theme CSS files
@@ -116,8 +121,13 @@ weather-app/
 │   │   └── utils/            # Storage, conversions, weather helpers
 │   ├── src-tauri/            # Tauri native app config
 │   └── package.json
-├── backend/                  # Legacy (not required)
+├── backend/                  # Accuracy tracking service (optional)
+│   └── app/
+│       ├── api/routes/       # FastAPI endpoints
+│       ├── services/         # Accuracy calculation
+│       └── constants.py      # Configurable thresholds
 ├── CHANGELOG.md              # Version history
+├── CLAUDE.md                 # Development context reference
 ├── DOCUMENTATION.md          # Technical documentation
 ├── LICENSE
 └── README.md
@@ -138,6 +148,28 @@ weather-app/
 
 See [CHANGELOG.md](CHANGELOG.md) for full version history.
 
+### v1.2.0 (2026-01-31)
+
+**Performance**
+- DNS prefetch/preconnect for faster API connections
+- React.memo() on key components (DailyForecast, CurrentWeather, HourlyGraph)
+- Request deduplication prevents duplicate API calls
+
+**Bug Fixes**
+- Fixed array bounds checking in forecast processing
+- Fixed NaN validation for ZIP code coordinates
+- Fixed cache race conditions with in-flight tracking
+- Fixed UK postcode regex false positives
+- Added silent failure logging for debugging
+
+**Code Quality**
+- Removed unused PasswordGate component
+- Removed duplicate backend services
+- Consolidated WEATHER_CODES to single source
+- Refactored storage helpers (340 → 218 lines)
+- Comprehensive code documentation added
+- Added CLAUDE.md development reference
+
 ### v1.1.0 (2026-01-31)
 
 **Features**
@@ -147,18 +179,11 @@ See [CHANGELOG.md](CHANGELOG.md) for full version history.
 - Offline detection with banner notification
 - Retry logic with exponential backoff
 - Elastic overscroll on timeline dial
-- Privacy section in Settings
-- Debug toggle for error states
 
 **Improvements**
 - Increased dial height with iOS safe area support
 - Non-selectable text for app-like feel
 - Fixed precipitation icon in 10-day forecast
-- Fixed confidence pill colors in glass theme
-- Fixed duplicate day names in forecast
-
-**Removed**
-- Pull-to-refresh (replaced by auto-refresh)
 
 ## Documentation
 

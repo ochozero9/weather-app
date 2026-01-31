@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-01-31
+
+### Added
+- **DNS prefetch**: Added preconnect hints for Open-Meteo APIs for faster initial connections
+- **Project documentation**: Comprehensive `CLAUDE.md` reference document for development context
+- **Code documentation**: Added detailed comments throughout codebase explaining:
+  - Startup logic and state management patterns
+  - Caching strategies and cache key precision (~1.1km tolerance)
+  - Request deduplication to prevent thundering herd
+  - SVG coordinate systems and bezier curve generation
+  - Backend accuracy tolerances and database-specific SQL notes
+
+### Changed
+- **DailyForecast optimization**: Wrapped with React.memo() and extracted DailyItem as memoized subcomponent
+- **Component memoization**: Added React.memo() to CurrentWeather, HourlyGraph, AccuracyBadge
+- **Daily forecast keys**: Changed from array index to date string for better React reconciliation
+
+### Fixed
+- **Array bounds checking**: Added validation before accessing hourly forecast arrays
+- **NaN coordinate validation**: ZIP code parsing now validates latitude/longitude are numbers
+- **Silent API failures**: Added logging when historical observation fetch fails
+- **UK postcode regex**: Tightened pattern to prevent false positives
+- **Sunrise/sunset bounds**: Added array length checks before accessing daily data
+- **Cache race conditions**: Added in-flight request tracking to prevent duplicate fetches
+- **Empty model data guard**: Added check for empty modelData object before processing
+
+### Removed
+- **PasswordGate component**: Removed unused client-side password protection (security anti-pattern)
+- **Backend ensemble service**: Removed duplicate of frontend logic (serverless architecture)
+- **Backend forecast routes**: Removed unused API routes not called by frontend
+
+### Refactored
+- **WEATHER_CODES consolidation**: Single source of truth in `constants/weather.ts`
+- **Storage helpers**: Refactored with internal generic functions, reduced from 340 to 218 lines
+- **Location handlers**: Merged duplicate handlers into single `handleLocationSelect`
+- **Backend constants**: Centralized to `app/constants.py` with documented rationale
+- **AccuracyService**: Converted from class-based singleton to plain module functions
+
+### Technical
+- Added `CLAUDE.md` with architecture diagrams, code patterns, and common tasks
+- Documented magic numbers: 0.01° tolerance, 0.042 Julian days, bezier tension 0.3
+- Added PostgreSQL migration notes for julianday() SQL function
+- Documented external API dependencies and fallback strategies
+
 ## [1.1.0] - 2026-01-31
 
 ### Added
@@ -72,5 +116,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 1.2.0 | 2026-01-31 | Performance optimizations, bug fixes, code cleanup, documentation |
 | 1.1.0 | 2026-01-31 | Auto-refresh, offline support, caching, UI polish |
 | 1.0.0 | 2026-01-28 | Initial release |
