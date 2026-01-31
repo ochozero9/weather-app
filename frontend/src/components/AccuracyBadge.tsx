@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 interface AccuracyBadgeProps {
   modelSpread?: {
     temperature: number;
@@ -9,7 +11,7 @@ interface AccuracyBadgeProps {
   onRefresh?: () => void;
 }
 
-export function AccuracyBadge({ modelSpread, dailyConfidence, showRefresh, onRefresh }: AccuracyBadgeProps) {
+export const AccuracyBadge = memo(function AccuracyBadge({ modelSpread, dailyConfidence, showRefresh, onRefresh }: AccuracyBadgeProps) {
   // Calculate expected accuracy from model agreement
   // Lower spread = higher agreement = better expected accuracy
 
@@ -63,4 +65,4 @@ export function AccuracyBadge({ modelSpread, dailyConfidence, showRefresh, onRef
       )}
     </div>
   );
-}
+});

@@ -1,3 +1,20 @@
+/**
+ * useWeather Hook
+ * ================
+ * Manages weather forecast data fetching, caching, and state.
+ *
+ * Design Patterns:
+ * - Stale-While-Revalidate: Shows cached data immediately, fetches fresh in background
+ * - Graceful Degradation: On error, keeps showing old data rather than blank screen
+ * - Loading vs Refreshing: Different UI states for initial load vs background refresh
+ *
+ * State Flow:
+ * 1. Initial load: loading=true, show skeleton
+ * 2. Cache loaded: isStale=true, show data with stale indicator
+ * 3. Fresh data: isStale=false, loading=false
+ * 4. Error with existing data: keep old data, show error toast (not implemented)
+ * 5. Error without data: show error state
+ */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { EnsembleForecast, Location } from '../types/weather';
 import { getForecast, getSavedLocations } from '../api/client';
@@ -28,11 +45,14 @@ export function useWeather(): UseWeatherReturn {
   const hasForecastRef = useRef(false);
   const lastLocationRef = useRef<{ lat: number; lon: number } | null>(null);
 
+  // Load forecast from localStorage cache for instant display
+  // Returns true if cache hit, false if miss
+  // Always marks data as stale - caller should fetch fresh data after
   const loadFromCache = useCallback((lat: number, lon: number): boolean => {
     const cached = loadCachedForecast(lat, lon);
     if (cached) {
       setForecast(cached);
-      setIsStale(true); // Mark as stale until fresh data arrives
+      setIsStale(true); // Always stale until fresh fetch completes
       hasForecastRef.current = true;
       return true;
     }
@@ -53,15 +73,18 @@ export function useWeather(): UseWeatherReturn {
     };
   }, []);
 
+  // Fetch fresh forecast from API
+  // UI state differs based on whether we already have data:
+  // - No data: loading=true (shows skeleton)
+  // - Has data: isRefreshing=true (shows subtle refresh indicator)
   const fetchForecast = useCallback(async (lat: number, lon: number) => {
-    // Save location for retry
-    lastLocationRef.current = { lat, lon };
+    lastLocationRef.current = { lat, lon }; // Save for retry functionality
 
-    // If we have existing data, show refreshing state instead of loading
+    // Different loading states for better UX
     if (hasForecastRef.current) {
-      setIsRefreshing(true);
+      setIsRefreshing(true); // Background refresh - don't disrupt current view
     } else {
-      setLoading(true);
+      setLoading(true); // Initial load - show loading skeleton
     }
     setError(null);
 
@@ -73,7 +96,9 @@ export function useWeather(): UseWeatherReturn {
       hasForecastRef.current = true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch forecast. Please try again.');
-      // Don't clear existing forecast on error - keep showing old data
+      // IMPORTANT: Don't clear existing forecast on error
+      // Showing stale data is better than showing nothing
+      // Only clear if we never had data to begin with
       if (!hasForecastRef.current) {
         setForecast(null);
       }

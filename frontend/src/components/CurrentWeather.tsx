@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { CurrentWeather as CurrentWeatherType, HourlyForecast } from '../types/weather';
 import type { TempUnit } from '../utils/weather';
 import type { IconStyle } from './WeatherIcon';
@@ -13,7 +14,7 @@ interface CurrentWeatherProps {
   hourly?: HourlyForecast[];
 }
 
-export function CurrentWeather({ current, locationName, unit, iconStyle, hourly }: CurrentWeatherProps) {
+export const CurrentWeather = memo(function CurrentWeather({ current, locationName, unit, iconStyle, hourly }: CurrentWeatherProps) {
   const weatherDescription = getWeatherDescription(current.weather_code);
   const now = new Date();
   const timeString = now.toLocaleTimeString('en-US', {
@@ -72,4 +73,4 @@ export function CurrentWeather({ current, locationName, unit, iconStyle, hourly 
 
     </div>
   );
-}
+});

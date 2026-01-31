@@ -38,7 +38,17 @@ import './styles/theme-futuristic.css';
 import './styles/theme-glass.css';
 import './styles/theme-oled.css';
 
-// Find the index of the current hour in the hourly array
+/**
+ * Find the index of the current hour in the hourly forecast array.
+ *
+ * The hourly array from Open-Meteo starts from the beginning of the current day,
+ * so we need to find the index that corresponds to "now" to slice off past hours.
+ *
+ * Edge cases handled:
+ * - If exact hour match found: returns that index
+ * - If current time falls between hours (API returned at :30): returns next hour index
+ * - If array doesn't contain current hour (stale data): returns 0 to show all available
+ */
 function getCurrentHourIndex(hourly: { time: string }[]): number {
   const now = new Date();
   const currentHour = now.getHours();
@@ -50,12 +60,13 @@ function getCurrentHourIndex(hourly: { time: string }[]): number {
     if (hourDate === currentDate && hourTime.getHours() === currentHour) {
       return i;
     }
-    // If we passed the current hour, return the previous valid index
+    // If we've passed the current time, return this index (the next upcoming hour)
+    // This handles the case where forecast was fetched mid-hour
     if (hourTime > now && i > 0) {
       return i;
     }
   }
-  return 0;
+  return 0; // Fallback: show all hours if current time not found (stale cache)
 }
 
 function App() {
@@ -123,11 +134,12 @@ function App() {
     saveAutoRefreshInterval(autoRefreshInterval);
   }, [autoRefreshInterval]);
 
-  // Auto-refresh timer
+  // Auto-refresh timer: periodically fetches fresh forecast data
+  // Timer resets when location changes or interval setting changes
   useEffect(() => {
     if (!selectedLocation) return;
 
-    const intervalMs = autoRefreshInterval * 60 * 1000;
+    const intervalMs = autoRefreshInterval * 60 * 1000; // Convert minutes to ms
     const timer = setInterval(() => {
       fetchForecast(selectedLocation.latitude, selectedLocation.longitude);
     }, intervalMs);
@@ -153,15 +165,18 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Load cached forecast and fetch fresh data on startup
+  // Startup data loading: implements "stale-while-revalidate" pattern
+  // 1. Immediately show cached data (if available) for instant perceived load
+  // 2. Fetch fresh data in background, which will replace cache when ready
+  // The ref prevents duplicate fetches on React strict mode double-mount
   useEffect(() => {
     if (initialFetchDone.current || !selectedLocation) return;
     initialFetchDone.current = true;
 
-    // Try to load from cache first for instant display
+    // Load cache first for instant display (may show stale data briefly)
     loadFromCache(selectedLocation.latitude, selectedLocation.longitude);
 
-    // Then fetch fresh data
+    // Then fetch fresh data (will update UI when complete)
     fetchForecast(selectedLocation.latitude, selectedLocation.longitude);
   }, [selectedLocation, fetchForecast, loadFromCache]);
 
@@ -195,12 +210,15 @@ function App() {
     }
   };
 
+  // Reset app to initial onboarding state (used for debugging)
+  // Full page reload is required because:
+  // 1. useWeather hook has internal state that can't be easily reset
+  // 2. Ensures all cached data and refs are cleared
+  // 3. Simulates fresh install experience for testing
   const handleResetOnboarding = () => {
-    // Clear all location data
     setSelectedLocation(null);
     setRecentLocations([]);
     clearLocationData();
-    // Force a re-render by clearing forecast state (via the hook)
     window.location.reload();
   };
 

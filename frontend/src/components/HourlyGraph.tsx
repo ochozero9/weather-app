@@ -26,7 +26,7 @@
  * - Hooks rules: early return MUST be after all hooks
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import type { HourlyForecast } from '../types/weather';
 import type { TempUnit } from '../utils/weather';
 import { convertTemp } from '../utils/weather';
@@ -41,7 +41,7 @@ interface HourlyGraphProps {
   hoursToShow?: number;
 }
 
-export function HourlyGraph({ hourly, unit, hoursToShow: externalHours }: HourlyGraphProps) {
+export const HourlyGraph = memo(function HourlyGraph({ hourly, unit, hoursToShow: externalHours }: HourlyGraphProps) {
   const [activeLayers, setActiveLayers] = useState<Set<DataLayer>>(new Set(['temp', 'precip', 'snow', 'wind']));
   const [internalHours, setInternalHours] = useState<HourOption>(12);
   const hoursToShow = externalHours ?? internalHours;
@@ -68,12 +68,13 @@ export function HourlyGraph({ hourly, unit, hoursToShow: externalHours }: Hourly
   const svgWidth = padding.left + padding.right + (displayHours.length) * hourWidth;
   const chartHeight = graphHeight - padding.top - padding.bottom;
 
-  // Calculate data ranges
+  // Calculate data ranges for Y-axis scaling
+  // Padding values (±3° for temp, min 15 for wind) ensure the line doesn't touch edges
   const { temps, minTemp, maxTemp, maxWind, maxPrecip, maxSnow, snowData } = useMemo(() => {
     const temps = displayHours.map(h => convertTemp(h.temperature, unit));
-    const minT = Math.floor(Math.min(...temps) - 3);
-    const maxT = Math.ceil(Math.max(...temps) + 3);
-    const maxW = Math.max(...displayHours.map(h => h.wind_speed), 15);
+    const minT = Math.floor(Math.min(...temps) - 3);  // -3° padding below
+    const maxT = Math.ceil(Math.max(...temps) + 3);   // +3° padding above
+    const maxW = Math.max(...displayHours.map(h => h.wind_speed), 15); // Min 15 km/h for scale
 
     const snowData = displayHours.map(h => {
       if (isSnowCode(h.weather_code)) {
@@ -150,6 +151,8 @@ export function HourlyGraph({ hourly, unit, hoursToShow: externalHours }: Hourly
   }, [temps]);
 
   // Find peak wind points for labels
+  // Only label peaks above 5 km/h (light breeze) to avoid cluttering calm conditions
+  // Endpoints labeled if above 10 km/h (gentle breeze) since they're visually prominent
   const windPeakPoints = useMemo(() => {
     const winds = displayHours.map(h => h.wind_speed);
     if (winds.length < 2) return [];
@@ -161,12 +164,13 @@ export function HourlyGraph({ hourly, unit, hoursToShow: externalHours }: Hourly
       const curr = winds[i];
       const next = winds[i + 1];
 
+      // Local maximum detection: higher than neighbors AND above minimum threshold
       if (curr > prev && curr >= next && curr > 5) {
         points.push({ index: i, speed: curr });
       }
     }
 
-    // Add first/last if significant
+    // Add first/last points if wind is significant (higher threshold for edges)
     if (winds[0] > 10) points.unshift({ index: 0, speed: winds[0] });
     if (winds[winds.length - 1] > 10) points.push({ index: winds.length - 1, speed: winds[winds.length - 1] });
 
@@ -454,4 +458,4 @@ export function HourlyGraph({ hourly, unit, hoursToShow: externalHours }: Hourly
       </div>
     </div>
   );
-}
+});
