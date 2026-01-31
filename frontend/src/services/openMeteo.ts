@@ -285,10 +285,16 @@ async function geocodeByZip(
     const place = data.places?.[0];
     if (!place) return [];
 
+    const latitude = parseFloat(place.latitude);
+    const longitude = parseFloat(place.longitude);
+    if (isNaN(latitude) || isNaN(longitude)) {
+      return [];
+    }
+
     return [{
       name: `${place['place name']}, ${place['state abbreviation'] || place.state || ''}`.trim(),
-      latitude: parseFloat(place.latitude),
-      longitude: parseFloat(place.longitude),
+      latitude,
+      longitude,
       country: data['country abbreviation'] || country.toUpperCase(),
       admin1: place.state || place['state abbreviation'] || '',
       timezone: 'auto',
