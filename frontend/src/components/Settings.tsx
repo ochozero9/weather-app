@@ -20,7 +20,6 @@ interface SettingsProps {
   quickSwitch: boolean;
   autoRefreshInterval: AutoRefreshInterval;
   onLocationSelect: (location: GeocodingResult) => void;
-  onRecentLocationSelect: (location: GeocodingResult) => void;
   onRemoveRecentLocation: (location: GeocodingResult, e: React.MouseEvent) => void;
   onRememberLocationChange: (value: boolean) => void;
   onShowRecentLocationsChange: (value: boolean) => void;
@@ -51,7 +50,6 @@ export function Settings({
   quickSwitch,
   autoRefreshInterval,
   onLocationSelect,
-  onRecentLocationSelect,
   onRemoveRecentLocation,
   onRememberLocationChange,
   onShowRecentLocationsChange,
@@ -134,7 +132,7 @@ export function Settings({
                   <li
                     key={`${loc.latitude}-${loc.longitude}`}
                     className="recent-location-item"
-                    onClick={() => onRecentLocationSelect(loc)}
+                    onClick={() => onLocationSelect(loc)}
                   >
                     <span className="recent-location-name">{loc.name}, {loc.country}</span>
                     <button

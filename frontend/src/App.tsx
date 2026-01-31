@@ -180,19 +180,6 @@ function App() {
     await fetchForecast(location.latitude, location.longitude);
   };
 
-  const handleRecentLocationSelect = async (location: GeocodingResult) => {
-    setSelectedLocation(location);
-    setShowSettings(false);
-    if (rememberLocation) {
-      saveLocation(location);
-    }
-    // Move to top of recent list
-    const updated = addToRecentLocations(location, recentLocations);
-    setRecentLocations(updated);
-    saveRecentLocations(updated);
-    await fetchForecast(location.latitude, location.longitude);
-  };
-
   const handleRemoveRecentLocation = (location: GeocodingResult, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering the select
     const updated = recentLocations.filter(
@@ -311,7 +298,7 @@ function App() {
                 selectedLocation={selectedLocation ?? undefined}
                 recentLocations={recentLocations}
                 quickSwitch={quickSwitch}
-                onLocationSelect={handleRecentLocationSelect}
+                onLocationSelect={handleLocationSelect}
                 showRefresh={true}
                 onRefresh={handleRefresh}
                 onSettingsClick={showSettings ? undefined : () => setShowSettings(true)}
@@ -352,7 +339,6 @@ function App() {
             quickSwitch={quickSwitch}
             autoRefreshInterval={autoRefreshInterval}
             onLocationSelect={handleLocationSelect}
-            onRecentLocationSelect={handleRecentLocationSelect}
             onRemoveRecentLocation={handleRemoveRecentLocation}
             onRememberLocationChange={setRememberLocation}
             onShowRecentLocationsChange={setShowRecentLocations}
