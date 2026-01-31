@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.schemas import AccuracyBadge, AccuracyResponse
-from app.services.accuracy import accuracy_service
+from app.services.accuracy import calculate_accuracy_metrics, get_accuracy_badge
 
 router = APIRouter(prefix="/accuracy", tags=["accuracy"])
 
@@ -23,7 +23,7 @@ async def get_accuracy_metrics(
     - Accuracy by lead time (24h, 48h, 72h, etc.)
     - Per-model performance comparison
     """
-    return await accuracy_service.calculate_accuracy_metrics(db, location_id, days)
+    return await calculate_accuracy_metrics(db, location_id, days)
 
 
 @router.get("/badge", response_model=AccuracyBadge)
@@ -37,7 +37,7 @@ async def get_accuracy_badge(
 
     Returns a formatted text like "94% accurate for 72h forecasts"
     """
-    return await accuracy_service.get_accuracy_badge(db, location_id, lead_hours)
+    return await get_accuracy_badge(db, location_id, lead_hours)
 
 
 @router.get("/models")
@@ -50,7 +50,7 @@ async def get_model_accuracy(
 
     Useful for understanding which models perform best in your area.
     """
-    metrics = await accuracy_service.calculate_accuracy_metrics(db, None, days)
+    metrics = await calculate_accuracy_metrics(db, None, days)
     return {
         "period": metrics.period,
         "models": [
