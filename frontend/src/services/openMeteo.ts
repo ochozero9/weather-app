@@ -17,6 +17,31 @@ const AIR_QUALITY_BASE = 'https://air-quality-api.open-meteo.com/v1/air-quality'
 const GEOCODING_BASE = 'https://geocoding-api.open-meteo.com/v1/search';
 const ZIPPOPOTAM_BASE = 'https://api.zippopotam.us';
 
+/**
+ * Retry a fetch with exponential backoff.
+ * @param fn - Function that returns a promise
+ * @param retries - Number of retry attempts (default: 2)
+ * @param delay - Initial delay in ms (default: 1000)
+ */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  retries = 2,
+  delay = 1000
+): Promise<T> {
+  let lastError: Error | null = null;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      if (attempt < retries) {
+        await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, attempt)));
+      }
+    }
+  }
+  throw lastError;
+}
+
 export const WEATHER_MODELS = [
   'gfs_seamless',
   'ecmwf_ifs04',
@@ -124,7 +149,7 @@ import type { GeocodingResult } from '../types/weather';
 export type { GeocodingResult };
 
 /**
- * Fetch forecast from a single weather model.
+ * Fetch forecast from a single weather model with retry.
  */
 async function fetchModelForecast(
   lat: number,
@@ -143,10 +168,12 @@ async function fetchModelForecast(
   });
 
   try {
-    const resp = await fetch(`${FORECAST_BASE}?${params}`, { signal: AbortSignal.timeout(30000) });
-    if (!resp.ok) return null;
-    const data = await resp.json();
-    return { model, ...data };
+    return await withRetry(async () => {
+      const resp = await fetch(`${FORECAST_BASE}?${params}`, { signal: AbortSignal.timeout(15000) });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+      return { model, ...data } as RawModelForecast;
+    }, 1, 500); // 1 retry with 500ms initial delay
   } catch {
     return null;
   }
@@ -160,12 +187,17 @@ export async function fetchAllModels(
   lat: number,
   lon: number
 ): Promise<RawModelForecast[]> {
+  // Check if offline before making requests
+  if (!navigator.onLine) {
+    throw new Error('You appear to be offline. Please check your internet connection.');
+  }
+
   const results = await Promise.all(
     WEATHER_MODELS.map((model) => fetchModelForecast(lat, lon, model))
   );
   const valid = results.filter((r): r is RawModelForecast => r !== null);
   if (valid.length === 0) {
-    throw new Error('Unable to fetch weather data. All models failed.');
+    throw new Error('Unable to fetch weather data. Please check your connection and try again.');
   }
   return valid;
 }

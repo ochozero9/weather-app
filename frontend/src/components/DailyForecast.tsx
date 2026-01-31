@@ -2,7 +2,7 @@ import type { DailyForecast as DailyForecastType } from '../types/weather';
 import type { TempUnit } from '../utils/weather';
 import type { IconStyle } from './WeatherIcon';
 import { convertTemp } from '../utils/weather';
-import { WeatherIcon, UtilityIcon } from './WeatherIcon';
+import { WeatherIcon } from './WeatherIcon';
 import { getWeatherDescription } from '../utils/weather';
 
 interface DailyForecastProps {
@@ -12,10 +12,18 @@ interface DailyForecastProps {
 }
 
 export function DailyForecast({ daily, unit, iconStyle }: DailyForecastProps) {
-  const formatDay = (dateStr: string, index: number) => {
-    if (index === 0) return 'Today';
-    if (index === 1) return 'Tomorrow';
-    const date = new Date(dateStr);
+  const formatDay = (dateStr: string) => {
+    const date = new Date(dateStr + 'T00:00:00');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const dateOnly = new Date(date);
+    dateOnly.setHours(0, 0, 0, 0);
+
+    if (dateOnly.getTime() === today.getTime()) return 'Today';
+    if (dateOnly.getTime() === tomorrow.getTime()) return 'Tomorrow';
     return date.toLocaleDateString('en-US', { weekday: 'short' });
   };
 
@@ -40,7 +48,7 @@ export function DailyForecast({ daily, unit, iconStyle }: DailyForecastProps) {
                 className={`confidence-circle ${getConfidenceClass(day.confidence)}`}
                 title={`Forecast confidence: ${day.confidence}%`}
               />
-              <span className="day-name">{formatDay(day.date, index)}</span>
+              <span className="day-name">{formatDay(day.date)}</span>
               <div className="day-weather-group">
                 <span className="day-icon" title={description}>
                   <WeatherIcon code={day.weather_code} style={iconStyle} size={28} />
@@ -53,7 +61,9 @@ export function DailyForecast({ daily, unit, iconStyle }: DailyForecastProps) {
               <span className="day-precip" title="Chance of rain">
                 {day.precipitation_probability_max > 0 ? (
                   <>
-                    <UtilityIcon type="humidity" style={iconStyle} size={14} />
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+                    </svg>
                     <span>{day.precipitation_probability_max}%</span>
                   </>
                 ) : (

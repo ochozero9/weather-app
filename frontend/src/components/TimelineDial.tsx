@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, useState } from 'react';
 import { isSnowCode } from '../constants/weather';
 
 interface DialHour {
@@ -19,6 +19,9 @@ export function TimelineDial({ hours, selectedIndex, onIndexChange, showNowLabel
   const isDragging = useRef(false);
   const startX = useRef(0);
   const startIndex = useRef(0);
+  const overscrollRef = useRef(0);
+  const [overscroll, setOverscroll] = useState(0);
+  const [isSnapping, setIsSnapping] = useState(false);
 
   const formatTime = (timeStr: string) => {
     const date = new Date(timeStr);
@@ -37,6 +40,7 @@ export function TimelineDial({ hours, selectedIndex, onIndexChange, showNowLabel
     isDragging.current = true;
     startX.current = clientX;
     startIndex.current = selectedIndex;
+    setIsSnapping(false);
   }, [selectedIndex]);
 
   const handleDragMove = useCallback((clientX: number) => {
@@ -44,31 +48,48 @@ export function TimelineDial({ hours, selectedIndex, onIndexChange, showNowLabel
     const delta = startX.current - clientX;
     const sensitivity = 8;
     const indexDelta = Math.round(delta / sensitivity);
-    const newIndex = Math.max(0, Math.min(hours.length - 1, startIndex.current + indexDelta));
-    onIndexChange(newIndex);
+    const rawIndex = startIndex.current + indexDelta;
+    const clampedIndex = Math.max(0, Math.min(hours.length - 1, rawIndex));
+
+    // Calculate overscroll with rubber band effect
+    let newOverscroll = 0;
+    if (rawIndex < 0) {
+      newOverscroll = rawIndex * sensitivity * 0.3;
+    } else if (rawIndex > hours.length - 1) {
+      newOverscroll = (rawIndex - (hours.length - 1)) * sensitivity * 0.3;
+    }
+    overscrollRef.current = newOverscroll;
+    setOverscroll(newOverscroll);
+
+    onIndexChange(clampedIndex);
   }, [hours.length, onIndexChange]);
 
   const handleDragEnd = useCallback(() => {
+    if (!isDragging.current) return;
     isDragging.current = false;
+    if (overscrollRef.current !== 0) {
+      setIsSnapping(true);
+      setOverscroll(0);
+      overscrollRef.current = 0;
+    }
   }, []);
 
   useEffect(() => {
-    const handleGlobalMouseUp = () => { isDragging.current = false; };
     const handleGlobalMouseMove = (e: MouseEvent) => handleDragMove(e.clientX);
     const handleGlobalTouchMove = (e: TouchEvent) => handleDragMove(e.touches[0].clientX);
 
-    window.addEventListener('mouseup', handleGlobalMouseUp);
+    window.addEventListener('mouseup', handleDragEnd);
     window.addEventListener('mousemove', handleGlobalMouseMove);
-    window.addEventListener('touchend', handleGlobalMouseUp);
+    window.addEventListener('touchend', handleDragEnd);
     window.addEventListener('touchmove', handleGlobalTouchMove);
 
     return () => {
-      window.removeEventListener('mouseup', handleGlobalMouseUp);
+      window.removeEventListener('mouseup', handleDragEnd);
       window.removeEventListener('mousemove', handleGlobalMouseMove);
-      window.removeEventListener('touchend', handleGlobalMouseUp);
+      window.removeEventListener('touchend', handleDragEnd);
       window.removeEventListener('touchmove', handleGlobalTouchMove);
     };
-  }, [handleDragMove]);
+  }, [handleDragMove, handleDragEnd]);
 
   return (
     <div
@@ -81,7 +102,11 @@ export function TimelineDial({ hours, selectedIndex, onIndexChange, showNowLabel
       <div className="dial-center-indicator" />
       <div
         className="dial-track"
-        style={{ transform: `translateX(calc(50% - ${selectedIndex * 70 + 35}px))` }}
+        style={{
+          transform: `translateX(calc(50% - ${selectedIndex * 70 + 35}px - ${overscroll}px))`,
+          transition: isSnapping ? 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none'
+        }}
+        onTransitionEnd={() => setIsSnapping(false)}
       >
         {hours.map((hour, index) => {
           const distance = Math.abs(index - selectedIndex);

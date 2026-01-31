@@ -31,7 +31,7 @@ interface UnifiedWeatherProps {
   recentLocations?: GeocodingResult[];
   quickSwitch?: boolean;
   onLocationSelect?: (location: GeocodingResult) => void;
-  // Refresh (shown when pull-to-refresh is disabled)
+  // Refresh
   showRefresh?: boolean;
   onRefresh?: () => void;
   // Settings
