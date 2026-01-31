@@ -1,3 +1,25 @@
+"""
+Open-Meteo API Client
+=====================
+Handles all external API communication for weather data.
+
+External Dependencies:
+- api.open-meteo.com: Main forecast API (free, no API key required)
+- archive-api.open-meteo.com: Historical data for accuracy verification
+- geocoding-api.open-meteo.com: Location search by name
+- air-quality-api.open-meteo.com: AQI data
+- api.zippopotam.us: ZIP/postal code lookup (third-party, not Open-Meteo)
+
+Error Handling Strategy:
+- Individual model failures are logged and skipped (graceful degradation)
+- No automatic retries (forecasts are ephemeral, retry at higher layer)
+- Client errors return None, callers must handle missing data
+
+Performance:
+- Single httpx.AsyncClient reused for connection pooling
+- Parallel fetching of all weather models
+- 30-second timeout per request
+"""
 import asyncio
 import logging
 from datetime import datetime
@@ -9,7 +31,15 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-# API parameter constants - centralized for consistency
+# ============================================
+# API Parameters
+# ============================================
+# These map directly to Open-Meteo query parameters.
+# See: https://open-meteo.com/en/docs for full documentation.
+#
+# Parameter naming follows WMO conventions:
+# - "_2m" = measured at 2 meters above ground
+# - "_10m" = measured at 10 meters above ground
 HOURLY_PARAMS = [
     "temperature_2m",
     "relative_humidity_2m",
@@ -54,7 +84,15 @@ HISTORICAL_HOURLY_PARAMS = [
 
 
 class OpenMeteoClient:
-    """Client for fetching weather data from Open-Meteo API."""
+    """
+    Client for fetching weather data from Open-Meteo API.
+
+    Lifecycle: Must call startup() before use and shutdown() on app termination.
+    Uses a single httpx.AsyncClient for connection pooling across all requests.
+
+    Thread Safety: This client is designed for single-threaded async use.
+    The httpx.AsyncClient handles concurrent requests safely.
+    """
 
     def __init__(self):
         self.base_url = settings.open_meteo_base_url
@@ -62,7 +100,11 @@ class OpenMeteoClient:
         self._client: Optional[httpx.AsyncClient] = None
 
     async def startup(self) -> None:
-        """Initialize the HTTP client. Call during app startup."""
+        """Initialize the HTTP client. Call during app startup (lifespan)."""
+        # Single client instance for connection pooling benefits:
+        # - Reuses TCP connections across requests
+        # - Maintains connection pool to API servers
+        # - 30s timeout balances responsiveness with slow API recovery
         self._client = httpx.AsyncClient(timeout=30.0)
 
     async def shutdown(self) -> None:
@@ -153,7 +195,18 @@ class OpenMeteoClient:
         start_date: str,
         end_date: str
     ) -> Optional[Dict[str, Any]]:
-        """Fetch historical weather observations for verification."""
+        """
+        Fetch historical weather observations for accuracy verification.
+
+        IMPORTANT: Uses a DIFFERENT API endpoint than forecasts!
+        - Forecast API: api.open-meteo.com (predictions)
+        - Archive API: archive-api.open-meteo.com (actual observations)
+
+        The archive API provides reanalysis data (ERA5) which is the "ground truth"
+        for verifying how accurate our forecasts were.
+
+        Data availability: Archive typically has ~5 day lag from current date.
+        """
         params = {
             "latitude": latitude,
             "longitude": longitude,
@@ -164,7 +217,7 @@ class OpenMeteoClient:
         }
 
         try:
-            # Use the historical API for past observations
+            # Archive API is separate from forecast API
             response = await self.client.get(
                 "https://archive-api.open-meteo.com/v1/archive",
                 params=params
@@ -197,7 +250,19 @@ class OpenMeteoClient:
             return []
 
     async def geocode_zip(self, zip_code: str, country: str = "us") -> Optional[Dict[str, Any]]:
-        """Search for location by zip/postal code using Zippopotam.us API."""
+        """
+        Search for location by zip/postal code using Zippopotam.us API.
+
+        EXTERNAL DEPENDENCY: api.zippopotam.us (third-party, not Open-Meteo)
+        - Free, no API key required
+        - Supports US, UK, CA, DE, and other countries
+        - Returns approximate city center for the postal code
+
+        Limitations:
+        - Invalid/non-existent postal codes return HTTP 404
+        - No fallback if this service is down
+        - Country code must match postal code format (e.g., "us" for 5-digit ZIP)
+        """
         try:
             response = await self.client.get(
                 f"https://api.zippopotam.us/{country}/{zip_code}"
@@ -205,7 +270,7 @@ class OpenMeteoClient:
             response.raise_for_status()
             data = response.json()
 
-            # Parse Zippopotam response format
+            # Parse Zippopotam response format into our GeocodingResult structure
             if data and "places" in data and len(data["places"]) > 0:
                 place = data["places"][0]
                 return {
@@ -215,7 +280,7 @@ class OpenMeteoClient:
                     "country": data.get("country", country.upper()),
                     "country_code": data.get("country abbreviation", country.upper()),
                     "admin1": place.get("state", ""),
-                    "timezone": "auto",  # Will be determined by Open-Meteo
+                    "timezone": "auto",  # Open-Meteo will determine from coordinates
                     "postal_code": zip_code,
                 }
             return None
@@ -228,11 +293,25 @@ class OpenMeteoClient:
         latitude: float,
         longitude: float
     ) -> Optional[Dict[str, Any]]:
-        """Fetch current air quality data."""
+        """
+        Fetch current air quality data.
+
+        Uses US AQI standard (0-500 scale):
+        - 0-50: Good
+        - 51-100: Moderate
+        - 101-150: Unhealthy for sensitive groups
+        - 151-200: Unhealthy
+        - 201-300: Very unhealthy
+        - 301-500: Hazardous
+
+        LOCALIZATION NOTE: Currently hardcoded to "us_aqi".
+        For EU users, consider adding "european_aqi" parameter.
+        The scales are different and not directly comparable.
+        """
         params = {
             "latitude": latitude,
             "longitude": longitude,
-            "current": ["us_aqi", "pm2_5", "pm10"],
+            "current": ["us_aqi", "pm2_5", "pm10"],  # US standard
             "timezone": "auto",
         }
 

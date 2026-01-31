@@ -1,8 +1,23 @@
+/**
+ * Storage Utils
+ * =============
+ * All app state persistence via localStorage.
+ *
+ * Key Design Decisions:
+ * - All storage operations are wrapped in try/catch for Safari private mode
+ * - JSON values are validated on load (corrupt data returns defaults)
+ * - Forecast cache uses 2 decimal precision for location keys (~1.1km accuracy)
+ * - Recent locations capped at 5 to prevent unbounded growth
+ *
+ * Storage Keys:
+ * - Settings: theme, unit, icon style, location preferences
+ * - Data: current location, recent locations, forecast cache
+ */
 import type { GeocodingResult, EnsembleForecast } from '../types/weather';
 import type { TempUnit } from './weather';
 import type { IconStyle } from '../components/WeatherIcon';
 
-// Storage keys
+// Storage keys - prefixed to avoid conflicts with other apps
 const STORAGE_KEY = 'weather-app-last-location';
 const THEME_STORAGE_KEY = 'weather-app-theme';
 const UNIT_STORAGE_KEY = 'weather-app-unit';
@@ -13,7 +28,7 @@ const SHOW_RECENT_KEY = 'weather-app-show-recent';
 const QUICK_SWITCH_KEY = 'weather-app-quick-switch';
 const AUTO_REFRESH_KEY = 'weather-app-auto-refresh';
 const FORECAST_CACHE_KEY = 'weather-app-forecast-cache';
-const MAX_RECENT_LOCATIONS = 5;
+const MAX_RECENT_LOCATIONS = 5; // Prevent unbounded storage growth
 
 // ============================================
 // Generic storage helpers
@@ -152,10 +167,18 @@ export const loadRecentLocations = (): GeocodingResult[] => loadJson(RECENT_LOCA
 export const saveRecentLocations = (locations: GeocodingResult[]): void =>
   saveJson(RECENT_LOCATIONS_KEY, locations);
 
+/**
+ * Add a location to the recent locations list.
+ * - Removes duplicates (by exact coordinates)
+ * - Moves to front if already exists (MRU order)
+ * - Caps at MAX_RECENT_LOCATIONS to prevent unbounded growth
+ */
 export function addToRecentLocations(location: GeocodingResult, existing: GeocodingResult[]): GeocodingResult[] {
+  // Remove if already in list (will be re-added at front)
   const filtered = existing.filter(
     loc => !(loc.latitude === location.latitude && loc.longitude === location.longitude)
   );
+  // Prepend new location and trim to max size
   return [location, ...filtered].slice(0, MAX_RECENT_LOCATIONS);
 }
 
@@ -178,15 +201,30 @@ export function clearLocationData(): void {
 // ============================================
 // Forecast cache
 // ============================================
+// Single-entry cache for instant app startup.
+// Only stores one location's forecast (the most recent).
+// Evicts after 1 hour since weather data becomes stale.
 
 interface CachedForecast {
   forecast: EnsembleForecast;
   timestamp: number;
-  locationKey: string;
+  locationKey: string;  // Format: "lat,lon" with 2 decimal places
 }
 
-const CACHE_MAX_AGE_MS = 60 * 60 * 1000; // 1 hour
+const CACHE_MAX_AGE_MS = 60 * 60 * 1000; // 1 hour - balance between freshness and usability
 
+/**
+ * Load cached forecast for a location.
+ *
+ * Location matching uses 2 decimal precision (e.g., "40.71,-74.01"):
+ * - 0.01° ≈ 1.1km at equator - acceptable for weather data resolution
+ * - Prevents cache misses from floating point rounding differences
+ *
+ * Returns null if:
+ * - No cache exists
+ * - Cache is for a different location
+ * - Cache is older than CACHE_MAX_AGE_MS
+ */
 export function loadCachedForecast(lat: number, lon: number): EnsembleForecast | null {
   try {
     const saved = localStorage.getItem(FORECAST_CACHE_KEY);
@@ -198,7 +236,7 @@ export function loadCachedForecast(lat: number, lon: number): EnsembleForecast |
       }
     }
   } catch {
-    // Ignore parse errors
+    // Ignore parse errors - corrupt cache is treated as cache miss
   }
   return null;
 }

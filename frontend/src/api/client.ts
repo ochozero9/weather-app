@@ -21,7 +21,13 @@ import { fetchAllModels, fetchAirQuality, geocodeLocation as geoSearch } from '.
 import { calculateEnsemble, buildModelComparison } from '../services/ensemble';
 import type { RawModelForecast } from '../services/openMeteo';
 
-// Cache raw model data for model comparison without re-fetching
+// ============================================
+// Model Data Caching
+// ============================================
+// Raw model data is cached separately from the processed ensemble forecast.
+// This allows the ModelComparison view to access individual model predictions
+// without re-fetching all 6 models from Open-Meteo.
+
 interface CachedModelData {
   data: RawModelForecast[];
   timestamp: number;
@@ -29,50 +35,75 @@ interface CachedModelData {
   longitude: number;
 }
 
-const MODEL_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const MODEL_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes - weather doesn't change that fast
 let cachedModelData: CachedModelData | null = null;
+
+// In-flight request tracking prevents "thundering herd" problem:
+// If user rapidly switches locations or triggers multiple fetches,
+// we reuse the pending request instead of spawning duplicates.
 let inFlightRequest: Promise<RawModelForecast[]> | null = null;
 let inFlightCoords: { lat: number; lon: number } | null = null;
 
+/**
+ * Check if cached model data is still valid for the given coordinates.
+ * Location tolerance of 0.01° ≈ 1.1km - close enough for weather data.
+ */
 function isModelCacheValid(lat: number, lon: number): boolean {
   if (!cachedModelData) return false;
   const isExpired = Date.now() - cachedModelData.timestamp > MODEL_CACHE_TTL_MS;
+  // 0.01° tolerance: roughly 1.1km at equator, less at higher latitudes
+  // This is acceptable because weather data has ~1km resolution anyway
   const isSameLocation =
     Math.abs(cachedModelData.latitude - lat) <= 0.01 &&
     Math.abs(cachedModelData.longitude - lon) <= 0.01;
   return !isExpired && isSameLocation;
 }
 
+/**
+ * Fetch weather forecast for given coordinates.
+ * Returns ensemble forecast (weighted average of 6 weather models).
+ *
+ * Request deduplication: If a request for the same location is already
+ * in flight, we return that promise instead of making a duplicate request.
+ * This prevents race conditions when React strict mode double-mounts or
+ * when user rapidly interacts with location controls.
+ */
 export async function getForecast(lat: number, lon: number): Promise<EnsembleForecast> {
-  // Reuse in-flight request for same coordinates to prevent race conditions
+  // Check if we can reuse an in-flight request (same coordinates within tolerance)
   const isSameCoords = inFlightCoords &&
     Math.abs(inFlightCoords.lat - lat) <= 0.01 &&
     Math.abs(inFlightCoords.lon - lon) <= 0.01;
 
   let modelDataPromise: Promise<RawModelForecast[]>;
   if (inFlightRequest && isSameCoords) {
+    // Reuse existing request - prevents duplicate API calls
     modelDataPromise = inFlightRequest;
   } else {
+    // New request - track it for potential reuse
     inFlightCoords = { lat, lon };
     inFlightRequest = fetchAllModels(lat, lon);
     modelDataPromise = inFlightRequest;
   }
 
+  // Fetch model data and air quality in parallel
   const [modelData, airQuality] = await Promise.all([
     modelDataPromise,
     fetchAirQuality(lat, lon),
   ]);
 
-  // Clear in-flight tracking
+  // Clear in-flight tracking after request completes
   inFlightRequest = null;
   inFlightCoords = null;
 
+  // Cache raw model data for ModelComparison view
   cachedModelData = {
     data: modelData,
     timestamp: Date.now(),
     latitude: lat,
     longitude: lon,
   };
+
+  // Process raw model data into weighted ensemble forecast
   return calculateEnsemble(modelData, airQuality);
 }
 
