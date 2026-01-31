@@ -6,14 +6,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import init_db
 from app.api.routes import forecast, locations, accuracy
+from app.services.open_meteo import open_meteo_client
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     await init_db()
+    await open_meteo_client.startup()
     yield
     # Shutdown
+    await open_meteo_client.shutdown()
 
 
 app = FastAPI(
@@ -23,13 +26,21 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Configure CORS - allow all origins for development
+# Configure CORS - restrict to known development origins
+# Add production domains here when deploying
+ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Vite dev server
+    "http://localhost:3000",  # Alternative dev port
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Accept"],
 )
 
 # Include routers

@@ -2,6 +2,81 @@ import type { GeocodingResult, EnsembleForecast } from '../types/weather';
 import type { TempUnit } from './weather';
 import type { IconStyle } from '../components/WeatherIcon';
 
+/**
+ * Generic localStorage helper for type-safe storage operations.
+ * Reduces boilerplate for simple string-based settings.
+ */
+export function createStorageAccessor<T extends string>(
+  key: string,
+  validate: (value: string | null) => value is T,
+  defaultValue: T
+) {
+  return {
+    load: (): T => {
+      try {
+        const saved = localStorage.getItem(key);
+        return validate(saved) ? saved : defaultValue;
+      } catch {
+        return defaultValue;
+      }
+    },
+    save: (value: T): void => {
+      try {
+        localStorage.setItem(key, value);
+      } catch {
+        // Ignore storage errors
+      }
+    },
+  };
+}
+
+/**
+ * Generic localStorage helper for boolean settings.
+ */
+export function createBooleanStorage(key: string, defaultValue: boolean) {
+  return {
+    load: (): boolean => {
+      try {
+        const saved = localStorage.getItem(key);
+        if (saved === null) return defaultValue;
+        return saved === 'true';
+      } catch {
+        return defaultValue;
+      }
+    },
+    save: (value: boolean): void => {
+      try {
+        localStorage.setItem(key, String(value));
+      } catch {
+        // Ignore storage errors
+      }
+    },
+  };
+}
+
+/**
+ * Generic localStorage helper for JSON-serialized data.
+ */
+export function createJsonStorage<T>(key: string, defaultValue: T) {
+  return {
+    load: (): T => {
+      try {
+        const saved = localStorage.getItem(key);
+        return saved ? JSON.parse(saved) : defaultValue;
+      } catch {
+        return defaultValue;
+      }
+    },
+    save: (value: T): void => {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch {
+        // Ignore storage errors
+      }
+    },
+  };
+}
+
 // Storage keys
 const STORAGE_KEY = 'weather-app-last-location';
 const THEME_STORAGE_KEY = 'weather-app-theme';

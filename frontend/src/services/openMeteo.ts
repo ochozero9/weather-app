@@ -321,13 +321,15 @@ export async function geocodeLocation(
     results.push(...nameResults);
   }
 
-  // Deduplicate by coordinates (within 0.01 degree tolerance)
+  // Deduplicate by coordinates (within 0.01 degree tolerance) using Set for O(n)
   const unique: GeocodingResult[] = [];
+  const seen = new Set<string>();
   for (const r of results) {
-    const isDup = unique.some(
-      (u) => Math.abs(u.latitude - r.latitude) < 0.01 && Math.abs(u.longitude - r.longitude) < 0.01
-    );
-    if (!isDup) unique.push(r);
+    const key = `${r.latitude.toFixed(2)},${r.longitude.toFixed(2)}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(r);
+    }
   }
 
   return unique.slice(0, limit);
