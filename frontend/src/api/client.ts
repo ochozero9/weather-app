@@ -31,6 +31,8 @@ interface CachedModelData {
 
 const MODEL_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 let cachedModelData: CachedModelData | null = null;
+let inFlightRequest: Promise<RawModelForecast[]> | null = null;
+let inFlightCoords: { lat: number; lon: number } | null = null;
 
 function isModelCacheValid(lat: number, lon: number): boolean {
   if (!cachedModelData) return false;
@@ -42,10 +44,28 @@ function isModelCacheValid(lat: number, lon: number): boolean {
 }
 
 export async function getForecast(lat: number, lon: number): Promise<EnsembleForecast> {
+  // Reuse in-flight request for same coordinates to prevent race conditions
+  const isSameCoords = inFlightCoords &&
+    Math.abs(inFlightCoords.lat - lat) <= 0.01 &&
+    Math.abs(inFlightCoords.lon - lon) <= 0.01;
+
+  let modelDataPromise: Promise<RawModelForecast[]>;
+  if (inFlightRequest && isSameCoords) {
+    modelDataPromise = inFlightRequest;
+  } else {
+    inFlightCoords = { lat, lon };
+    inFlightRequest = fetchAllModels(lat, lon);
+    modelDataPromise = inFlightRequest;
+  }
+
   const [modelData, airQuality] = await Promise.all([
-    fetchAllModels(lat, lon),
+    modelDataPromise,
     fetchAirQuality(lat, lon),
   ]);
+
+  // Clear in-flight tracking
+  inFlightRequest = null;
+  inFlightCoords = null;
 
   cachedModelData = {
     data: modelData,
