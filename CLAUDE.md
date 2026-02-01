@@ -223,11 +223,38 @@ From code comments and TODOs:
 2. Backend: Set `echo=True` in database config for SQL logging
 3. Frontend: Check `cachedModelData` in api/client.ts
 
+## Icons
+
+Source icons are in `/icons` folder (iOS and Android exports).
+
+| Location | Purpose |
+|----------|---------|
+| `/icons/iOS/` | iOS app icons (all sizes) |
+| `/icons/Android/` | Android app icons (all densities) |
+| `/frontend/public/` | PWA icons (favicon, apple-touch-icon) |
+| `/frontend/src-tauri/icons/` | Tauri native app icons |
+
+### Regenerating Tauri Icons
+
+Use the 1024x1024 iOS artwork as source:
+```bash
+cd frontend
+npm run tauri icon ../icons/iOS/iTunesArtwork@2x.png
+```
+
+### Updating PWA Favicons
+
+Resize from iOS icons:
+```bash
+cd frontend/public
+sips -z 16 16 "../../icons/iOS/Icon-20@1x.png" --out favicon-16.png
+sips -z 32 32 "../../icons/iOS/Icon-20@2x.png" --out favicon-32.png
+```
+
 ## Git Workflow
 
 - `main` - Production
-- `dev` - Development integration
-- `feature/*` - Feature branches
+- `backup/*` - Archived snapshots (before-tauri, with-backend)
 
 ## Build Commands
 
@@ -237,7 +264,11 @@ cd frontend
 npm install
 npm run dev          # Development server
 npm run build        # Production build
-npm run build:tauri  # Desktop app
+npm run deploy       # Deploy to GitHub Pages
+
+# Tauri (requires Rust)
+source ~/.cargo/env  # Ensure cargo is in PATH
+npm run build:tauri  # Desktop app → src-tauri/target/release/bundle/
 
 # Backend
 cd backend
