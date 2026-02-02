@@ -1,7 +1,7 @@
 # Weather App - Project Reference
 
 > This document serves as context for Claude when working on this project.
-> Last updated: 2026-01-31
+> Last updated: 2026-02-01
 
 ## Project Overview
 
@@ -173,6 +173,8 @@ catch (err) {
 | `0.3` | HourlyGraph.tsx | Bezier curve tension |
 | `60` | hourWidth | Pixels per hour in graph |
 | `5` | MAX_RECENT_LOCATIONS | Recent locations limit |
+| `336` | tauri.conf.json | Tauri window min width (px) |
+| `436` | tauri.conf.json | Tauri window max width (px) |
 
 ## Known Limitations
 
@@ -231,6 +233,8 @@ Source icons are in `/icons` folder (iOS and Android exports).
 |----------|---------|
 | `/icons/iOS/` | iOS app icons (all sizes) |
 | `/icons/Android/` | Android app icons (all densities) |
+| `/icons/Mac/` | macOS icons (16-512 + @2x variants) |
+| `/icons/favicon/` | Favicon source |
 | `/frontend/public/` | PWA icons (favicon, apple-touch-icon) |
 | `/frontend/src-tauri/icons/` | Tauri native app icons |
 
@@ -242,13 +246,38 @@ cd frontend
 npm run tauri icon ../icons/iOS/iTunesArtwork@2x.png
 ```
 
-### Updating PWA Favicons
+### Updating PWA Icons
 
-Resize from iOS icons:
+Resize all PWA icons from 1024x1024 source:
 ```bash
 cd frontend/public
-sips -z 16 16 "../../icons/iOS/Icon-20@1x.png" --out favicon-16.png
-sips -z 32 32 "../../icons/iOS/Icon-20@2x.png" --out favicon-32.png
+sips -z 180 180 ../../icons/iOS/iTunesArtwork@2x.png --out apple-touch-icon.png
+sips -z 120 120 ../../icons/iOS/iTunesArtwork@2x.png --out apple-touch-icon-120.png
+sips -z 152 152 ../../icons/iOS/iTunesArtwork@2x.png --out apple-touch-icon-152.png
+sips -z 167 167 ../../icons/iOS/iTunesArtwork@2x.png --out apple-touch-icon-167.png
+sips -z 192 192 ../../icons/iOS/iTunesArtwork@2x.png --out icon-192.png
+sips -z 512 512 ../../icons/iOS/iTunesArtwork@2x.png --out icon-512.png
+sips -z 16 16 ../../icons/iOS/iTunesArtwork@2x.png --out favicon-16.png
+sips -z 32 32 ../../icons/iOS/iTunesArtwork@2x.png --out favicon-32.png
+```
+
+### Regenerating macOS .icns
+
+Generate from Mac folder PNGs using iconutil:
+```bash
+mkdir -p /tmp/Weather.iconset
+cp icons/Mac/16.png /tmp/Weather.iconset/icon_16x16.png
+cp icons/Mac/16@2x.png /tmp/Weather.iconset/icon_16x16@2x.png
+cp icons/Mac/32.png /tmp/Weather.iconset/icon_32x32.png
+cp icons/Mac/32@2x.png /tmp/Weather.iconset/icon_32x32@2x.png
+cp icons/Mac/128.png /tmp/Weather.iconset/icon_128x128.png
+cp icons/Mac/128@2x.png /tmp/Weather.iconset/icon_128x128@2x.png
+cp icons/Mac/256.png /tmp/Weather.iconset/icon_256x256.png
+cp icons/Mac/256@2x.png /tmp/Weather.iconset/icon_256x256@2x.png
+cp icons/Mac/512.png /tmp/Weather.iconset/icon_512x512.png
+cp icons/Mac/512@2x.png /tmp/Weather.iconset/icon_512x512@2x.png
+iconutil -c icns /tmp/Weather.iconset -o frontend/src-tauri/icons/icon.icns
+rm -rf /tmp/Weather.iconset
 ```
 
 ## Git Workflow
