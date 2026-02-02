@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **DNS prefetch**: Added preconnect hints for Open-Meteo APIs for faster initial connections
-- **Project documentation**: Comprehensive `CLAUDE.md` reference document for development context
+- **Project documentation**: Comprehensive `CLAUDE.md` reference document for development context (local-only, not in repo)
 - **Code documentation**: Added detailed comments throughout codebase explaining:
   - Startup logic and state management patterns
   - Caching strategies and cache key precision (~1.1km tolerance)
@@ -44,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **AccuracyService**: Converted from class-based singleton to plain module functions
 
 ### Technical
-- Added `CLAUDE.md` with architecture diagrams, code patterns, and common tasks
+- Added `CLAUDE.md` with architecture diagrams, code patterns, and common tasks (local-only, not in repo)
 - Documented magic numbers: 0.01° tolerance, 0.042 Julian days, bezier tension 0.3
 - Added PostgreSQL migration notes for julianday() SQL function
 - Documented external API dependencies and fallback strategies
