@@ -9,7 +9,7 @@ A self-contained, multi-model ensemble weather forecasting application that comb
 | Platform | Link | Status |
 |----------|------|--------|
 | **Web App (PWA)** | [https://ochozero9.github.io/weather-app/](https://ochozero9.github.io/weather-app/) | Live |
-| **macOS App** | Build locally with `npm run build:tauri` | Local build |
+| **macOS App** | [Download from Releases](https://github.com/ochozero9/weather-app/releases) | Apple Silicon |
 | **iOS** | Add web app to home screen | PWA |
 | **Android** | Add web app to home screen | PWA |
 
@@ -119,7 +119,7 @@ weather-app/
 │   │   ├── styles/           # Theme CSS files
 │   │   ├── types/            # TypeScript interfaces
 │   │   └── utils/            # Storage, conversions, weather helpers
-│   ├── src-tauri/            # Tauri native app config
+│   ├── src-tauri/            # Tauri native app config (optional, for desktop builds)
 │   └── package.json
 ├── backend/                  # Accuracy tracking service (optional)
 │   └── app/
@@ -127,7 +127,6 @@ weather-app/
 │       ├── services/         # Accuracy calculation
 │       └── constants.py      # Configurable thresholds
 ├── CHANGELOG.md              # Version history
-├── CLAUDE.md                 # Development context reference
 ├── DOCUMENTATION.md          # Technical documentation
 ├── LICENSE
 └── README.md
@@ -139,10 +138,15 @@ weather-app/
 - Node.js 18+
 - npm 9+
 
+That's it for the web app. The `src-tauri/` folder is included for building the desktop app, but you can ignore it if you only want to run or deploy the web version.
+
 ### Native App (Tauri)
+If you want to build the macOS desktop app yourself:
 - All of the above, plus:
 - Rust: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
 - Xcode Command Line Tools (macOS): `xcode-select --install`
+
+Or just download the pre-built `.dmg` from [Releases](https://github.com/ochozero9/weather-app/releases).
 
 ## Changelog
 
@@ -168,7 +172,6 @@ See [CHANGELOG.md](CHANGELOG.md) for full version history.
 - Consolidated WEATHER_CODES to single source
 - Refactored storage helpers (340 → 218 lines)
 - Comprehensive code documentation added
-- Added CLAUDE.md development reference
 
 ### v1.1.0 (2026-01-31)
 
