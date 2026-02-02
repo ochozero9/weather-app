@@ -43,3 +43,6 @@ htmlcov/
 # Misc
 *.bak
 *.tmp
+
+# Claude context (keep local)
+CLAUDE.md
